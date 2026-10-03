@@ -159,10 +159,10 @@ export default function Footer() {
 
         {/* Bottom bar */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-20 md:pb-0">
-          <p className="text-[12px] text-[#6b6560] text-center md:text-left">
+          <p className="text-[12px] text-[#6b6560] text-center md:text-left md:flex-1">
             © 2026 Bangalir Berano Tours &amp; Travels. All rights reserved.
           </p>
-          <p className="text-[12px] text-[#6b6560] text-center md:text-right leading-relaxed">
+          <p className="text-[12px] text-[#6b6560] text-center leading-relaxed md:flex-1">
             Made by{' '}
             <a 
               href="https://www.smsrc.in" 
@@ -173,6 +173,7 @@ export default function Footer() {
               SM Software Resource Capital
             </a>
           </p>
+          <div className="hidden md:block md:flex-1"></div>
         </div>
       </div>
     </footer>
