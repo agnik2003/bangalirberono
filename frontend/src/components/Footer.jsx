@@ -46,7 +46,7 @@ export default function Footer() {
       {/* Background blob */}
       <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-[#c9a96e]/2 blur-3xl pointer-events-none" aria-hidden="true" />
 
-      <div className="max-w-[1400px] mx-auto px-6 pt-16 pb-8">
+      <div className="max-w-[1400px] mx-auto px-6 pt-16 pb-32 md:pb-8">
         {/* Main footer grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-14">
           {/* Brand column */}
@@ -159,13 +159,19 @@ export default function Footer() {
 
         {/* Bottom bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-[12px] text-[#3a3530]">
+          <p className="text-[12px] text-[#3a3530] text-center sm:text-left">
             © 2026 Bangalir Berano Tours &amp; Travels. All rights reserved.
           </p>
-          <div className="flex items-center gap-2 text-[12px] text-[#3a3530]">
-            <span>Made with</span>
-            <span className="text-[#c9a96e]">♥</span>
-            <span>for every traveller</span>
+          <div className="flex items-center gap-2 text-[12px] text-[#3a3530] text-center sm:text-right flex-wrap justify-center">
+            <span>Made by</span>
+            <a 
+              href="https://www.smsrc.in" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-[#a09a8e] hover:text-[#c9a96e] font-semibold transition-colors"
+            >
+              SM Software Resource Capital
+            </a>
           </div>
         </div>
       </div>
