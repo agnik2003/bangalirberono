@@ -127,9 +127,24 @@ export default function ContactForm() {
                 <div className="w-11 h-11 rounded-xl bg-[#c9a96e]/10 border border-[#c9a96e]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <MapPin size={18} className="text-[#c9a96e]" />
                 </div>
-                <div>
+                <div className="flex-1 w-full">
                   <p className="text-[11px] text-[#6b6560] uppercase tracking-wide mb-0.5">Visit Us</p>
-                  <p className="text-[14px] text-[#a09a8e] leading-relaxed">{BRAND.address}</p>
+                  <p className="text-[14px] text-[#a09a8e] leading-relaxed mb-5 pr-4">{BRAND.address}</p>
+                  
+                  {/* Google Map Embed */}
+                  <div className="w-full h-48 md:h-56 rounded-xl overflow-hidden border border-[#c9a96e]/20 group relative bg-[#16161a]">
+                    <iframe 
+                      src="https://maps.google.com/maps?q=BANGALIR%20BERANO,%20Uttarpara,%20West%20Bengal&t=&z=16&ie=UTF8&iwloc=&output=embed" 
+                      width="100%" 
+                      height="100%" 
+                      style={{ border: 0 }} 
+                      allowFullScreen="" 
+                      loading="lazy" 
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title="Bangalir Berano Office Location"
+                      className="opacity-80 group-hover:opacity-100 transition-opacity duration-300 w-full h-full"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
