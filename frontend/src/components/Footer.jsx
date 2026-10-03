@@ -158,21 +158,21 @@ export default function Footer() {
         <div className="section-divider mb-6" />
 
         {/* Bottom bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-[12px] text-[#3a3530] text-center sm:text-left">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-20 md:pb-0">
+          <p className="text-[12px] text-[#6b6560] text-center md:text-left">
             © 2026 Bangalir Berano Tours &amp; Travels. All rights reserved.
           </p>
-          <div className="flex items-center gap-2 text-[12px] text-[#3a3530] text-center sm:text-right flex-wrap justify-center">
-            <span>Made by</span>
+          <p className="text-[12px] text-[#6b6560] text-center md:text-right leading-relaxed">
+            Made by{' '}
             <a 
               href="https://www.smsrc.in" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-[#a09a8e] hover:text-[#c9a96e] font-semibold transition-colors"
+              className="text-[#c9a96e] hover:text-[#e07b39] font-bold transition-colors"
             >
               SM Software Resource Capital
             </a>
-          </div>
+          </p>
         </div>
       </div>
     </footer>

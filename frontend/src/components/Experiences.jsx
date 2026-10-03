@@ -10,8 +10,8 @@ function ExperienceCard({ exp, index }) {
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true, margin: '-60px' }}
       transition={{ delay: index * 0.08, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      className="group relative flex-shrink-0 w-72 sm:w-80 rounded-2xl overflow-hidden cursor-pointer"
-      style={{ height: '400px' }}
+      className="group relative flex-shrink-0 w-[82vw] sm:w-[320px] md:w-[340px] rounded-2xl overflow-hidden cursor-pointer"
+      style={{ height: '420px' }}
     >
       <img
         src={exp.image}
