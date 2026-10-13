@@ -11,25 +11,6 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // If already logged in, seamlessly redirect to dashboard
-  useEffect(() => {
-    const token = localStorage.getItem('admin_token');
-    if (!token) return;
-
-    fetch(`${API}/admin/check`, {
-      headers: { Authorization: `Bearer ${token}` },
-      credentials: 'include'
-    })
-      .then(res => {
-        if (res.ok) {
-          navigate('/admin/dashboard', { replace: true });
-        } else {
-          localStorage.removeItem('admin_token');
-        }
-      })
-      .catch(() => {});
-  }, [navigate]);
-
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
@@ -43,9 +24,6 @@ export default function AdminLogin() {
       });
       const data = await response.json();
       if (data.success) {
-        if (data.token) {
-          localStorage.setItem('admin_token', data.token);
-        }
         navigate('/admin/dashboard'); 
       } else {
         setError(data.message || 'Invalid credentials');

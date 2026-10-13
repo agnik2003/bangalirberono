@@ -39,7 +39,6 @@ export default function AdminAllCustomers() {
       try {
         const res = await authFetch(`${API}/admin/check`);
         if (!res.ok) { 
-          localStorage.removeItem('admin_token');
           window.location.href = '/admin'; 
           return; 
         }
@@ -53,7 +52,6 @@ export default function AdminAllCustomers() {
         
         fetchCustomers();
       } catch { 
-        localStorage.removeItem('admin_token');
         window.location.href = '/admin'; 
       }
     };

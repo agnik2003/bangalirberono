@@ -18,6 +18,7 @@ const emailRoutes = require('./routes/emailRoutes');
 const customerRoutes = require('./routes/customers');
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5000;
 // Trigger restart to load port 587
 

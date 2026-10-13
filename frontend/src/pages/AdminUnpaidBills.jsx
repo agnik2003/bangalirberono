@@ -46,14 +46,12 @@ export default function AdminUnpaidBills() {
       try {
         const res = await authFetch(`${API}/admin/check`);
         if (!res.ok) { 
-          localStorage.removeItem('admin_token');
           window.location.href = '/admin'; 
           return; 
         }
         fetchBills();
         fetchPackages();
       } catch { 
-        localStorage.removeItem('admin_token');
         window.location.href = '/admin'; 
       }
     };

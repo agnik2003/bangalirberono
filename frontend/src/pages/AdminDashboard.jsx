@@ -832,13 +832,11 @@ Thank you for choosing Bangalir Berano!`;
       try {
         const res = await authFetch(`${API}/admin/check`);
         if (!res.ok) {
-          localStorage.removeItem('admin_token');
           navigate('/admin');
           return;
         }
         fetchEnquiries(); fetchBookings(); fetchPackages(); fetchCategories(); fetchBills(); fetchCustomers();
       } catch {
-        localStorage.removeItem('admin_token');
         navigate('/admin');
       }
     };
@@ -965,7 +963,6 @@ Thank you for choosing Bangalir Berano!`;
     try {
       await authFetch(`${API}/admin/logout`, { method: 'POST' });
     } catch { }
-    localStorage.removeItem('admin_token');
     navigate('/admin');
   };
 

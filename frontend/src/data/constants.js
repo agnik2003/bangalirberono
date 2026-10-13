@@ -1,4 +1,7 @@
 const getApiBase = () => {
+  if (typeof window !== 'undefined' && window.location.hostname.includes('netlify.app')) {
+    return `${window.location.origin}/api`;
+  }
   const envUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
   if (!envUrl) return 'http://localhost:5000/api';
   return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
@@ -7,14 +10,8 @@ const getApiBase = () => {
 export const API = getApiBase();
 
 export const authFetch = (url, options = {}) => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
-  const headers = { ...(options.headers || {}) };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
   return fetch(url, {
     ...options,
-    headers,
     credentials: 'include'
   });
 };
