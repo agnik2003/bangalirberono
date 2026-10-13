@@ -89,11 +89,12 @@ export default function FloatingContact() {
           <a
             href="#contact"
             onClick={scrollToContact}
-            className="flex-1 min-w-0 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-1 rounded-xl bg-gradient-to-r from-[#c9a96e] to-[#e07b39] active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(201,169,110,0.3)]"
+            className="flex-1 min-w-0 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-1 rounded-xl bg-gradient-to-r from-[#f5d489] via-[#e2be7a] to-[#e07b39] active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(201,169,110,0.3)] !text-[#0a0a0b]"
+            style={{ forcedColorAdjust: 'none', colorScheme: 'dark' }}
             aria-label="Plan Your Trip"
           >
-            <Calendar size={14} className="text-black shrink-0" />
-            <span className="text-[12px] sm:text-sm font-bold text-black truncate">Plan</span>
+            <Calendar size={14} className="!text-[#0a0a0b] shrink-0" />
+            <span className="text-[12px] sm:text-sm font-bold !text-[#0a0a0b] truncate">Plan</span>
           </a>
         </div>
       </motion.div>

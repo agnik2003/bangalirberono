@@ -5,6 +5,8 @@
    ============================================================ */
 
 :root {
+  color-scheme: dark only;
+  forced-color-adjust: none;
   --color-bg-primary: #0a0a0b;
   --color-bg-secondary: #111114;
   --color-bg-card: #16161a;
@@ -23,9 +25,12 @@
 *::before,
 *::after {
   box-sizing: border-box;
+  forced-color-adjust: none;
 }
 
 html {
+  color-scheme: dark only;
+  forced-color-adjust: none;
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
@@ -41,6 +46,8 @@ body {
   position: relative;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color-scheme: dark only;
+  forced-color-adjust: none;
 }
 
 #root {
@@ -99,10 +106,13 @@ body {
 
 /* ---- Gradient text utility ---- */
 .gradient-text {
-  background: linear-gradient(135deg, #c9a96e 0%, #e07b39 60%, #c9a96e 100%);
+  background: linear-gradient(135deg, #fce09b 0%, #e5a84e 50%, #f39c12 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  color: #f39c12;
+  display: inline-block;
+  forced-color-adjust: none;
 }
 
 /* ---- Glass card ---- */
@@ -155,8 +165,8 @@ body {
   justify-content: center;
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
-  background: linear-gradient(135deg, #c9a96e, #e07b39);
-  color: #0a0a0b;
+  background: linear-gradient(135deg, #f5d489 0%, #d8ad5e 50%, #e07b39 100%) !important;
+  color: #0a0a0b !important;
   font-weight: 700;
   font-size: 0.875rem;
   letter-spacing: 0.02em;
@@ -166,6 +176,9 @@ body {
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   text-decoration: none;
   box-sizing: border-box;
+  forced-color-adjust: none !important;
+  color-scheme: dark !important;
+  box-shadow: 0 4px 18px rgba(224, 123, 57, 0.35);
 }
 
 @media (min-width: 640px) {
@@ -178,7 +191,17 @@ body {
 
 .btn-primary:hover {
   transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 32px rgba(201, 169, 110, 0.35);
+  box-shadow: 0 8px 32px rgba(224, 123, 57, 0.5);
+  color: #0a0a0b !important;
+}
+
+/* Guard against browser auto-dark mode inverting golden buttons & pills */
+[class*="from-[#c9a96e]"],
+[class*="to-[#e07b39]"],
+[class*="from-[#e2be7a]"],
+[class*="from-[#f5d489]"] {
+  forced-color-adjust: none !important;
+  color-scheme: dark !important;
 }
 
 .btn-secondary {
