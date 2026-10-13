@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
 import { Send, CheckCircle, User, Phone, Mail, MapPin, Calendar, Users, ChevronDown } from 'lucide-react';
-import { BRAND, TRAVEL_TYPES } from '../data/constants';
+import { BRAND, TRAVEL_TYPES, API } from '../data/constants';
 
 const INITIAL_STATE = {
   name: '', phone: '', email: '', destination: '',
@@ -20,10 +20,34 @@ export default function ContactForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    // Simulate async submission (connect to API later)
-    await new Promise(r => setTimeout(r, 1200));
-    setLoading(false);
-    setSubmitted(true);
+    try {
+      const payload = { ...form };
+      if (payload.travellers) {
+        payload.travellers = Number(payload.travellers);
+      } else {
+        delete payload.travellers;
+      }
+      
+      const response = await fetch(`${API}/enquiries`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      if (response.ok) {
+        setSubmitted(true);
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to send enquiry: ${errorData.message || 'Please try again.'}`);
+      }
+    } catch (error) {
+      console.error('Error submitting enquiry:', error);
+      alert('An error occurred. Please check your connection and try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReset = () => {
@@ -44,8 +68,8 @@ export default function ContactForm() {
         <div className="absolute top-1/4 right-1/4 w-60 h-60 rounded-full bg-[#e07b39]/3 blur-3xl" />
       </div>
 
-      <div className="max-w-[1400px] mx-auto px-6 relative">
-        <div className="grid lg:grid-cols-2 gap-16 items-start">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 relative">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
           {/* Left info panel */}
           <motion.div
             initial={{ opacity: 0, x: -40 }}
@@ -129,7 +153,7 @@ export default function ContactForm() {
                 </div>
                 <div className="flex-1 w-full">
                   <p className="text-[11px] text-[#6b6560] uppercase tracking-wide mb-0.5">Visit Us</p>
-                  <p className="text-[14px] text-[#a09a8e] leading-relaxed mb-5 pr-4">{BRAND.address}</p>
+                  <p className="text-[14px] text-[#a09a8e] leading-relaxed mb-5 pr-4 whitespace-pre-line">{BRAND.address}</p>
                   
                   {/* Google Map Embed */}
                   <div className="w-full h-48 md:h-56 rounded-xl overflow-hidden border border-[#c9a96e]/20 group relative bg-[#16161a]">
@@ -157,7 +181,7 @@ export default function ContactForm() {
             transition={{ duration: 0.7, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
           >
             <div
-              className="rounded-3xl p-7 md:p-9"
+              className="rounded-3xl p-5 sm:p-7 md:p-9"
               style={{
                 background: 'rgba(255,255,255,0.02)',
                 border: '1px solid rgba(255,255,255,0.07)',
@@ -387,3 +411,6 @@ export default function ContactForm() {
     </section>
   );
 }
+
+
+

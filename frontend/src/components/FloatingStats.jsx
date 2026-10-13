@@ -48,7 +48,7 @@ function StatCard({ stat, index }) {
       initial={{ opacity: 0, y: 30 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ delay: index * 0.15, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-      className="flex flex-col items-center text-center px-6 py-8 group"
+      className="flex flex-col items-center text-center px-3 sm:px-6 py-5 sm:py-8 group"
     >
       <motion.p
         className="stat-number"
@@ -58,7 +58,7 @@ function StatCard({ stat, index }) {
       >
         <CountingNumber value={stat.value} inView={inView} />
       </motion.p>
-      <p className="text-[13px] font-medium text-[#6b6560] mt-2 tracking-wide uppercase">
+      <p className="text-[11px] sm:text-[13px] font-medium text-[#6b6560] mt-1.5 sm:mt-2 tracking-wide uppercase text-center">
         {stat.label}
       </p>
     </motion.div>
@@ -71,7 +71,7 @@ export default function FloatingStats() {
 
   return (
     <section id="stats" ref={ref} className="relative bg-[#0a0a0b] py-2" aria-label="Key statistics">
-      <div className="max-w-[1400px] mx-auto px-6">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
@@ -104,3 +104,4 @@ export default function FloatingStats() {
     </section>
   );
 }
+

@@ -115,8 +115,8 @@ export default function JourneySection() {
   const inView = useInView(headRef, { once: true, margin: '-50px' });
 
   return (
-    <section className="py-24 md:py-32 bg-[#0a0a0b] relative border-t border-white/5" id="vlogs">
-      <div className="max-w-[1400px] mx-auto px-6">
+    <section className="py-16 sm:py-20 md:py-28 bg-[#0a0a0b] relative border-t border-white/5" id="vlogs">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
 
         {/* Header & Channel Info */}
         <div ref={headRef} className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12 md:mb-16">
@@ -128,7 +128,7 @@ export default function JourneySection() {
               className="flex items-center gap-3 mb-4"
             >
               <img
-                src="/logo.png?v=3"
+                src="/logo.png?v=4"
                 alt="Bangalir Berano Logo"
                 className="w-12 h-12 md:w-16 md:h-16 rounded-full shadow-[0_0_20px_rgba(201,169,110,0.3)] object-cover"
               />
@@ -153,7 +153,7 @@ export default function JourneySection() {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-[#a09a8e] text-sm md:text-base max-w-xl"
             >
-              Welcome to Bangalir Berano channel — Your Passport to Adventure! Experience our curated journeys through our cinematic travel vlogs.
+              Watch raw, real moments from our recent group tours, sacred yatras, and mountain trails. Catch a glimpse of how we travel, laugh, and explore together before booking your next trip.
             </motion.p>
           </div>
 
@@ -164,7 +164,7 @@ export default function JourneySection() {
             href="https://www.youtube.com/@bangalirberano/videos"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-[#c9a96e] hover:border-[#c9a96e] hover:text-black text-white font-semibold text-sm transition-all duration-300 group whitespace-nowrap"
+            className="w-full sm:w-auto justify-center flex items-center gap-2 px-6 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-[#c9a96e] hover:border-[#c9a96e] hover:text-black text-white font-semibold text-sm transition-all duration-300 group whitespace-nowrap"
           >
             <YoutubeIcon size={18} className="text-[#ff0000] group-hover:text-black transition-colors" />
             Watch Latest Videos
@@ -183,3 +183,4 @@ export default function JourneySection() {
     </section>
   );
 }
+

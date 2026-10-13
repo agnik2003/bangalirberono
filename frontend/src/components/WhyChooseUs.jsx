@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { Map, Compass, Headphones, Camera } from 'lucide-react';
+import { Map, Compass, Headphones, Camera, Users, Building, Car, MapPin, Utensils, UserCheck, Train, MessageCircle } from 'lucide-react';
 import { WHY_US } from '../data/constants';
 
 const ICON_MAP = {
@@ -8,6 +8,14 @@ const ICON_MAP = {
   Compass,
   HeadphonesIcon: Headphones,
   Camera,
+  Users,
+  Building,
+  Car,
+  MapPin,
+  Utensils,
+  UserCheck,
+  Train,
+  MessageCircle,
 };
 
 function BenefitCard({ item, index }) {
@@ -21,24 +29,24 @@ function BenefitCard({ item, index }) {
       initial={{ opacity: 0, y: 40 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ delay: index * 0.12, duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-      className="group relative p-7 rounded-2xl border border-white/5 bg-[#16161a] hover:border-[#c9a96e]/20 transition-all duration-400 hover:-translate-y-1"
+      className="group relative p-4 sm:p-5 md:p-7 rounded-2xl border border-white/5 bg-[#16161a] hover:border-[#c9a96e]/20 transition-all duration-400 hover:-translate-y-1 flex flex-col"
       style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.3)' }}
     >
       {/* Icon */}
-      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#c9a96e]/15 to-[#e07b39]/10 border border-[#c9a96e]/15 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
-        <Icon size={22} className="text-[#c9a96e]" />
+      <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-[#c9a96e]/15 to-[#e07b39]/10 border border-[#c9a96e]/15 flex items-center justify-center mb-3 md:mb-5 group-hover:scale-110 transition-transform duration-300">
+        <Icon className="text-[#c9a96e] w-4 h-4 md:w-5 md:h-5" />
       </div>
 
       {/* Number */}
-      <span className="absolute top-6 right-6 text-[11px] font-bold tracking-[0.2em] text-[#3a3530]">
-        0{index + 1}
+      <span className="absolute top-4 right-4 md:top-6 md:right-6 text-[10px] md:text-[11px] font-bold tracking-[0.2em] text-[#3a3530]">
+        {(index + 1).toString().padStart(2, '0')}
       </span>
 
-      <h3 className="text-lg font-bold text-white mb-3">{item.title}</h3>
-      <p className="text-[14px] text-[#6b6560] leading-relaxed">{item.description}</p>
+      <h3 className="text-[13px] md:text-lg font-bold text-white mb-1.5 md:mb-3 leading-tight">{item.title}</h3>
+      <p className="text-[11px] md:text-[14px] text-[#6b6560] leading-snug md:leading-relaxed">{item.description}</p>
 
       {/* Hover glow accent */}
-      <div className="absolute bottom-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-[#c9a96e]/0 to-transparent group-hover:via-[#c9a96e]/25 transition-all duration-400" />
+      <div className="absolute bottom-0 left-4 right-4 md:left-6 md:right-6 h-px bg-gradient-to-r from-transparent via-[#c9a96e]/0 to-transparent group-hover:via-[#c9a96e]/25 transition-all duration-400" />
     </motion.div>
   );
 }
@@ -58,9 +66,9 @@ export default function WhyChooseUs() {
         <div className="absolute bottom-20 right-20 w-80 h-80 rounded-full bg-[#e07b39]/3 blur-3xl" />
       </div>
 
-      <div className="max-w-[1400px] mx-auto px-6 relative">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 relative">
         {/* Heading */}
-        <div ref={headRef} className="text-center mb-14">
+        <div ref={headRef} className="text-center mb-10 md:mb-14">
           <motion.p
             initial={{ opacity: 0 }}
             animate={inView ? { opacity: 1 } : {}}
@@ -80,7 +88,7 @@ export default function WhyChooseUs() {
         </div>
 
         {/* Cards grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 md:gap-5">
           {WHY_US.map((item, i) => (
             <BenefitCard key={item.id} item={item} index={i} />
           ))}
@@ -89,3 +97,4 @@ export default function WhyChooseUs() {
     </section>
   );
 }
+

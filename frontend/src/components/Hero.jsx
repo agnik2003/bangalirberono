@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Star, MapPin, ChevronDown } from 'lucide-react';
+import { ArrowRight, Star, MapPin, ChevronDown, Info, Calendar, MessageCircle, Flame, Users, AlertCircle } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { DESTINATIONS } from '../data/constants';
+import { API } from '../data/constants';
+import { TourDetailsModal, BookModal } from './Destinations';
+import { generateWhatsAppBookingUrl } from '../utils/whatsapp';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -12,56 +14,84 @@ export default function Hero() {
   const bgRef = useRef(null);
   const contentRef = useRef(null);
   const cardsRef = useRef(null);
+  const [packages, setPackages] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [currentDestIndex, setCurrentDestIndex] = useState(0);
+  const [selectedDestDetails, setSelectedDestDetails] = useState(null);
+  const [selectedDestBook, setSelectedDestBook] = useState(null);
+  const [isPaused, setIsPaused] = useState(false);
 
+  // ── Fetch packages from backend ──────────────────────────────────────────
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentDestIndex((prev) => (prev + 1) % DESTINATIONS.length);
-    }, 3500);
-    return () => clearInterval(timer);
+    const fetchPackages = async () => {
+      try {
+        const res = await fetch(`${API}/packages`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+          const upcoming = data.data.filter(p => !p.status || p.status === 'Upcoming');
+          setPackages(upcoming.length > 0 ? upcoming : data.data);
+        }
+      } catch (err) {
+        console.error('Failed to load hero packages:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPackages();
   }, []);
 
-  const scrollToSection = (href) => {
+  // ── Auto-rotate carousel ─────────────────────────────────────────────────
+  const displayList = packages;
+  useEffect(() => {
+    if (displayList.length <= 1 || isPaused || selectedDestDetails || selectedDestBook) return;
+    const timer = setInterval(() => {
+      setCurrentDestIndex(prev => (prev + 1) % displayList.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [displayList.length, isPaused, selectedDestDetails, selectedDestBook]);
+
+  const currentDest = displayList.length > 0
+    ? (displayList[currentDestIndex % displayList.length] || displayList[0])
+    : null;
+
+  const tagText = currentDest
+    ? (currentDest.tag || (currentDest.category && (Array.isArray(currentDest.category) ? currentDest.category[0] : currentDest.category)) || 'Tour')
+    : '';
+  const placesText = currentDest ? (currentDest.route || currentDest.region || '') : '';
+
+  const scrollToSection = href => {
     document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // ── GSAP desktop parallax (desktop only: >=1024px) ────────────────────────
   useEffect(() => {
-    let mm = gsap.matchMedia();
-
-    // 3D Scroll Effect ONLY for desktop/laptop (>= 768px)
-    mm.add("(min-width: 768px)", () => {
+    const mm = gsap.matchMedia();
+    mm.add('(min-width: 1024px)', () => {
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: containerRef.current,
           start: 'top top',
           end: 'bottom top',
-          scrub: 1, // Smooth scrub
-        }
+          scrub: 1,
+        },
       });
-
-      // Background scales slightly and pans left for a classy 3D horizontal slide effect
       tl.to(bgRef.current, { x: '-8%', y: '15%', scale: 1.15, ease: 'none' }, 0);
-
-      // UI elements slide up and fade out for parallax
       tl.to(contentRef.current, { y: '-150px', opacity: 0, ease: 'power1.out' }, 0);
       tl.to(cardsRef.current, { y: '-250px', x: '5%', opacity: 0, scale: 0.95, ease: 'power1.out' }, 0);
     });
-
-    return () => {
-      mm.revert();
-    };
+    return () => mm.revert();
   }, []);
 
+  // ────────────────────────────────────────────────────────────────────────
   return (
     <section
       id="home"
       ref={containerRef}
-      className="relative min-h-[100svh] w-full overflow-hidden bg-[#0a0a0b] flex flex-col justify-center"
+      className="relative w-full overflow-x-hidden bg-[#0a0a0b]"
       aria-label="Hero section"
+      style={{ minHeight: '100svh' }}
     >
-      {/* ==================================================
-          CINEMATIC 3D BACKGROUND
-          ================================================== */}
+      {/* ── BACKGROUND ─────────────────────────────────────────────────── */}
       <div ref={bgRef} className="absolute inset-0 w-full h-full origin-bottom">
         <img
           src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=85"
@@ -72,155 +102,289 @@ export default function Hero() {
         />
       </div>
 
-      {/* Heavy gradient at the bottom to blend seamlessly into the next dark section */}
+      {/* Gradient overlays — 20% darker on mobile for high text contrast; desktop preserved exactly as is */}
       <div className="absolute inset-0 pointer-events-none z-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0b]/30 via-transparent to-[#0a0a0b]" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0b]/80 md:from-[#0a0a0b]/60 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-[#0a0a0b]/50 lg:bg-[#0a0a0b]/18" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0b]/70 via-[#0a0a0b]/30 to-[#0a0a0b]/90 lg:from-[#0a0a0b]/50 lg:via-[#0a0a0b]/10 lg:to-[#0a0a0b]/80" />
+        <div className="hidden lg:block absolute inset-0 bg-gradient-to-r from-[#0a0a0b]/75 via-[#0a0a0b]/45 to-transparent" />
       </div>
 
-      {/* ==================================================
-          UI & TYPOGRAPHY
-          ================================================== */}
-
+      {/* ── CONTENT ────────────────────────────────────────────────────── */}
       <div
         ref={contentRef}
-        className="relative z-30 flex-1 h-full flex items-center max-w-[1400px] mx-auto px-5 md:px-6 w-full pt-28 pb-32 md:py-0"
+        className="relative z-30 w-full max-w-[1400px] mx-auto
+          px-4 sm:px-6 md:px-8 lg:px-10
+          pt-24 sm:pt-28 md:pt-32 lg:pt-28
+          pb-20 sm:pb-28 md:pb-28
+          lg:min-h-[100svh] lg:flex lg:items-center min-w-0 box-border"
       >
-        <div className="w-full grid lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+        {/* Two-column grid on desktop, single column on mobile */}
+        <div className="w-full grid lg:grid-cols-12 lg:gap-12 items-center min-w-0">
 
-          {/* LEFT COLUMN: TYPOGRAPHY & CTAs */}
+          {/* ── LEFT COLUMN: text & CTAs ─────────────────────────────── */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-            className="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left"
+            transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+            className="w-full lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left min-w-0"
           >
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 md:px-4 md:py-2 rounded-full glass border-white/10 mb-6 md:mb-8 shadow-lg">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#c9a96e] animate-pulse" />
-              <span className="text-[9px] md:text-[11px] font-semibold tracking-[0.25em] text-[#c9a96e] uppercase">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full glass border-white/10 mb-3.5 sm:mb-5 shadow-lg max-w-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#c9a96e] animate-pulse shrink-0" />
+              <span className="text-[9.5px] sm:text-[11px] font-semibold tracking-[0.16em] sm:tracking-[0.2em] text-[#c9a96e] uppercase truncate">
                 Travel · Explore · Experience
               </span>
             </div>
 
             {/* Heading */}
-            <h1 className="font-display text-[clamp(40px,9vw,88px)] font-bold leading-[1.05] text-white mb-5 md:mb-6">
-              Travel Beyond
-              <br className="hidden sm:block" />
-              <span className="sm:hidden"> </span>
+            <h1
+              className="font-display font-bold leading-[1.08] text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)] mb-3.5 sm:mb-5 max-w-full break-words"
+              style={{ fontSize: 'clamp(28px, 7.5vw, 72px)' }}
+            >
+              Travel Beyond<br />
               <span className="gradient-text">The Ordinary.</span>
             </h1>
 
-            {/* Subtext */}
-            <p className="text-[clamp(14px,3.5vw,19px)] text-[#a09a8e] leading-relaxed max-w-xl mb-8 md:mb-10">
-              Curated journeys, unforgettable experiences and beautiful destinations —
-              planned with care for every kind of traveller.
+            {/* Description */}
+            <p className="text-[13px] sm:text-[15px] md:text-[16px] text-[#f4efe6] font-normal leading-relaxed max-w-xl mb-5 sm:mb-6 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] px-1 sm:px-0">
+              Thoughtfully organized tours, comfortable stays, and genuine hospitality. From snow peaks to serene beaches, travel comfortably with people who care for you like family.
             </p>
 
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 w-full sm:w-auto relative z-40 mb-10 lg:mb-14">
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 w-full sm:w-auto mb-5 sm:mb-6 justify-center lg:justify-start max-w-[340px] sm:max-w-none mx-auto lg:mx-0 min-w-0">
               <button
                 onClick={() => scrollToSection('#destinations')}
-                className="btn-primary justify-center text-[14px] md:text-sm gap-2 min-h-[48px] md:min-h-0 px-7 py-3.5 w-full sm:w-auto"
+                className="btn-primary w-full sm:w-auto justify-center text-[13px] sm:text-sm py-2.5 sm:py-3 px-5 sm:px-7 min-h-[44px] min-w-0"
               >
-                Explore Journeys <ArrowRight size={16} />
+                <span className="truncate">Explore Journeys</span>
+                <ArrowRight size={14} className="shrink-0" />
               </button>
               <button
                 onClick={() => scrollToSection('#contact')}
-                className="btn-secondary justify-center text-[14px] md:text-sm gap-2 min-h-[48px] md:min-h-0 px-7 py-3.5 w-full sm:w-auto"
+                className="btn-secondary w-full sm:w-auto justify-center text-[13px] sm:text-sm py-2.5 sm:py-3 px-5 sm:px-7 min-h-[44px] min-w-0"
               >
-                Plan My Trip
+                <span className="truncate">Plan My Trip</span>
               </button>
             </div>
 
-            {/* Horizontal Rating Bar */}
-            <div className="flex items-center gap-4 md:gap-6 px-6 py-3.5 rounded-full border border-[#c9a96e]/20 bg-gradient-to-r from-[#c9a96e]/15 to-transparent backdrop-blur-md shadow-[0_0_20px_rgba(201,169,110,0.05)]">
-              <div className="flex flex-col md:flex-row items-center gap-1 md:gap-3">
-                <span className="text-[10px] md:text-[11px] text-[#c9a96e] font-bold tracking-[0.15em] uppercase hidden md:block">Google</span>
-                <div className="flex">
+            {/* Rating Bar */}
+            <div className="inline-flex items-center gap-2 sm:gap-3 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full border border-[#c9a96e]/20 bg-gradient-to-r from-[#c9a96e]/15 to-transparent backdrop-blur-md shadow-[0_0_20px_rgba(201,169,110,0.05)] max-w-full">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <span className="text-[10px] font-bold tracking-[0.15em] text-[#c9a96e] uppercase hidden sm:block">Google</span>
+                <div className="flex shrink-0">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={14} className="text-[#f5c842] fill-[#f5c842]" />
+                    <Star key={i} size={11} className="text-[#f5c842] fill-[#f5c842]" />
                   ))}
                 </div>
               </div>
-              <div className="h-6 w-px bg-white/10 hidden md:block" />
-              <div className="flex items-center gap-2">
-                <p className="text-white font-bold font-display text-xl leading-none">4.8</p>
-                <span className="text-[11px] md:text-sm text-[#a09a8e]">from 220+ Reviews</span>
+              <div className="w-px h-3.5 sm:h-4 bg-white/15 hidden sm:block shrink-0" />
+              <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 min-w-0">
+                <span className="text-white font-bold font-display text-xs sm:text-base leading-none">4.8</span>
+                <span className="text-[10.5px] sm:text-xs text-[#a09a8e] truncate">from 220+ Reviews</span>
               </div>
             </div>
           </motion.div>
 
-          {/* RIGHT COLUMN: BIG DESTINATION CARD */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
-            className="lg:col-span-5 flex justify-center lg:justify-end w-full"
-            ref={cardsRef} // Use cardsRef here for parallax scroll effect!
-          >
-            <div className="glass-dark rounded-2xl md:rounded-3xl overflow-hidden w-full max-w-sm lg:max-w-md shadow-2xl backdrop-blur-xl border border-white/10 relative">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentDestIndex}
-                  initial={{ opacity: 0, scale: 1.05 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.6, ease: "easeInOut" }}
-                >
-                  <div className="h-[250px] md:h-[350px] lg:h-[400px] relative overflow-hidden">
-                    <img
-                      src={DESTINATIONS[currentDestIndex].image}
-                      alt={`${DESTINATIONS[currentDestIndex].name} — next adventure`}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0b] via-[#0a0a0b]/30 to-transparent" />
-
-                    {/* Top tags */}
-                    <div className="absolute top-4 left-4">
-                      <span className="text-[9px] md:text-[10px] font-bold tracking-[0.2em] text-[#c9a96e] uppercase drop-shadow-lg">
-                        Next Adventure
-                      </span>
-                    </div>
-                    <div className="absolute top-4 right-4 glass px-2.5 py-1 rounded text-[9px] md:text-[10px] text-white font-semibold">
-                      {DESTINATIONS[currentDestIndex].tag || "Explore"}
-                    </div>
-
-                    {/* Bottom Content within the image box */}
-                    <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6 flex items-end justify-between">
-                      <div>
-                        <h3 className="text-2xl md:text-3xl font-display font-bold text-white mb-1 drop-shadow-md">
-                          {DESTINATIONS[currentDestIndex].name}
-                        </h3>
-                        <p className="text-[12px] md:text-sm text-[#a09a8e] flex items-center gap-1.5 drop-shadow-md">
-                          <MapPin size={14} className="text-[#c9a96e]" /> {DESTINATIONS[currentDestIndex].region}
-                        </p>
-                      </div>
-                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-[#c9a96e] to-[#e07b39] flex items-center justify-center flex-shrink-0 shadow-[0_0_15px_rgba(201,169,110,0.4)]">
-                        <ArrowRight size={18} className="text-black" />
-                      </div>
-                    </div>
+          {/* ── RIGHT COLUMN: Destination Card ───────────────────────── */}
+          {(loading || currentDest) && (
+            <motion.div
+              ref={cardsRef}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }}
+              className="w-full lg:col-span-5 flex justify-center lg:justify-end min-w-0 mt-6 sm:mt-8 lg:mt-0"
+            >
+              {loading ? (
+                /* Skeleton */
+                <div className="w-full max-w-[380px] sm:max-w-sm lg:max-w-md bg-[#141419]/95 rounded-2xl md:rounded-3xl overflow-hidden border border-[#c9a96e]/25 shadow-[0_20px_50px_rgba(0,0,0,0.7)] animate-pulse flex flex-col mx-auto lg:mx-0 box-border min-w-0">
+                  <div className="w-full h-[160px] sm:h-[210px] md:h-[235px] bg-[#1a1a22] relative">
+                    <div className="absolute top-3 left-3 w-24 h-5 rounded-full bg-white/10" />
+                    <div className="absolute top-3 right-3 w-20 h-5 rounded-full bg-white/10" />
                   </div>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-          </motion.div>
+                  <div className="p-3 sm:p-4 md:p-5 bg-[#141419] flex flex-col gap-2.5 sm:gap-3 border-t border-white/5 box-border min-w-0">
+                    <div>
+                      <div className="h-5 bg-white/10 rounded-lg w-3/4 mb-2" />
+                      <div className="h-3.5 bg-white/5 rounded-md w-1/2" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 w-full min-w-0">
+                      <div className="w-full h-11 bg-white/10 rounded-xl" />
+                      <div className="w-full h-11 bg-[#c9a96e]/20 rounded-xl" />
+                    </div>
+                    <div className="w-full h-11 bg-[#25D366]/15 rounded-xl" />
+                  </div>
+                </div>
+              ) : currentDest ? (
+                <div
+                  onMouseEnter={() => setIsPaused(true)}
+                  onMouseLeave={() => setIsPaused(false)}
+                  className="w-full max-w-[380px] sm:max-w-sm lg:max-w-md bg-[#141419]/95 rounded-2xl md:rounded-3xl overflow-hidden border border-[#c9a96e]/25 shadow-[0_20px_50px_rgba(0,0,0,0.7),0_0_30px_rgba(201,169,110,0.08)] flex flex-col mx-auto lg:mx-0 box-border min-w-0"
+                >
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={currentDest._id || currentDest.id || currentDestIndex}
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.98 }}
+                      transition={{ duration: 0.45, ease: 'easeInOut' }}
+                      className="flex flex-col w-full min-w-0"
+                    >
+                      {/* Card image */}
+                      <div
+                        onClick={() => setSelectedDestDetails(currentDest)}
+                        className="relative w-full h-[160px] sm:h-[210px] md:h-[235px] overflow-hidden bg-black/60 cursor-pointer group"
+                      >
+                        <img
+                          src={currentDest.image}
+                          alt={`${currentDest.name} — next adventure`}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#141419] via-transparent to-black/40 pointer-events-none" />
+
+                        {/* Category & Urgent Seats badges */}
+                        <div className="absolute top-0 left-0 right-0 p-2 sm:p-3.5 z-10 flex items-center justify-between gap-1.5 pointer-events-none min-w-0">
+                          {/* Left: Next Adventure & Category Tag */}
+                          <div className="flex items-center gap-1 sm:gap-1.5 min-w-0 overflow-hidden">
+                            <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[8.5px] sm:text-[10px] font-bold tracking-[0.1em] uppercase text-[#c9a96e] bg-[#0a0a0b]/90 backdrop-blur-md border border-[#c9a96e]/30 shadow-md shrink-0 whitespace-nowrap leading-tight">
+                              Next Adventure
+                            </span>
+                            {tagText && (
+                              <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[8.5px] sm:text-[10px] font-bold text-white bg-black/80 backdrop-blur-md border border-white/15 shadow-md truncate min-w-0 max-w-[75px] xs:max-w-[100px] sm:max-w-[140px] leading-tight">
+                                {tagText}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Right: Seats Left Badge (Flashing / Glowing when < 15) */}
+                          {currentDest.seatsLeft != null && currentDest.seatsLeft !== '' && (() => {
+                            const s = Number(currentDest.seatsLeft);
+                            const isUrgent = !isNaN(s) && s < 15 && s > 0;
+                            const isSoldOut = !isNaN(s) && s === 0;
+
+                            if (isSoldOut) {
+                              return (
+                                <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[8.5px] sm:text-[10px] font-bold tracking-wider uppercase text-red-300 bg-red-950/85 backdrop-blur-md border border-red-500/40 flex items-center gap-1 shadow-md shrink-0">
+                                  <AlertCircle size={10} className="text-red-400" /> Sold Out
+                                </span>
+                              );
+                            }
+
+                            if (isUrgent) {
+                              return (
+                                <span className="urgent-seats-badge px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[8.5px] sm:text-[10px] font-extrabold tracking-wider uppercase text-white bg-gradient-to-r from-red-600/90 via-orange-600/90 to-amber-500/90 backdrop-blur-md border border-amber-300 flex items-center gap-1 sm:gap-1.5 shadow-[0_0_15px_rgba(245,158,11,0.6)] select-none shrink-0 pointer-events-auto">
+                                  <Flame size={11} className="text-yellow-200 fill-yellow-300 animate-pulse shrink-0" />
+                                  <span className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">Hurry! Only {s} Left!</span>
+                                </span>
+                              );
+                            }
+
+                            return (
+                              <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[8.5px] sm:text-[10px] font-bold tracking-wider uppercase text-amber-300 bg-amber-950/80 backdrop-blur-md border border-amber-500/30 flex items-center gap-1 shadow-md shrink-0 pointer-events-auto">
+                                <Users size={10} className="text-amber-400" /> {currentDest.seatsLeft} Seats
+                              </span>
+                            );
+                          })()}
+                        </div>
+
+                        {/* Hover hint */}
+                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                          <span className="px-3 py-1.5 rounded-full bg-[#0a0a0b]/80 backdrop-blur-md text-white text-[11px] font-bold border border-white/20 flex items-center gap-1.5 shadow-xl">
+                            <Info size={12} className="text-[#c9a96e]" /> Click for Tour Details
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Card info panel */}
+                      <div className="p-3 sm:p-4 md:p-5 bg-[#141419] flex flex-col gap-2.5 sm:gap-3 border-t border-white/5 box-border min-w-0">
+                        {/* Title + route */}
+                        <div className="min-w-0">
+                          <h3
+                            onClick={() => setSelectedDestDetails(currentDest)}
+                            className="text-[15px] sm:text-xl md:text-2xl font-display font-bold text-white leading-tight cursor-pointer hover:text-[#c9a96e] transition-colors truncate mb-1"
+                            title={currentDest.name}
+                          >
+                            {currentDest.name}
+                          </h3>
+                          {placesText && (
+                            <p className="text-[11px] sm:text-[13px] text-[#a09a8e] flex items-center gap-1 min-w-0">
+                              <MapPin size={11} className="text-[#c9a96e] shrink-0" />
+                              <span className="truncate">{placesText}</span>
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Action buttons */}
+                        <div className="flex flex-col gap-2 w-full min-w-0">
+                          {/* Details + Book Now side-by-side with 50/50 grid */}
+                          <div className="grid grid-cols-2 gap-2 w-full min-w-0">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedDestDetails(currentDest)}
+                              className="w-full bg-white/5 hover:bg-white/10 border border-white/15 hover:border-[#c9a96e]/50 text-white font-semibold py-2.5 px-2 rounded-xl text-[12px] sm:text-[13px] transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 min-h-[44px] min-w-0 box-border"
+                            >
+                              <Info size={13} className="text-[#c9a96e] shrink-0" />
+                              <span className="truncate">Details</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedDestBook(currentDest)}
+                              className="w-full bg-gradient-to-r from-[#c9a96e] to-[#e07b39] text-[#0a0a0b] font-bold py-2.5 px-2 rounded-xl text-[12px] sm:text-[13px] transition-transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-1.5 shadow-[0_4px_18px_rgba(201,169,110,0.35)] cursor-pointer min-h-[44px] min-w-0 box-border"
+                            >
+                              <Calendar size={13} className="shrink-0" />
+                              <span className="truncate">Book Now</span>
+                            </button>
+                          </div>
+
+                          {/* WhatsApp Button */}
+                          <a
+                            href={generateWhatsAppBookingUrl(currentDest)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full bg-[#25D366]/15 hover:bg-[#25D366] text-[#25D366] hover:text-[#0a0a0b] border border-[#25D366]/40 hover:border-[#25D366] font-bold py-2.5 px-3 rounded-xl text-[12px] sm:text-[13px] transition-all duration-300 flex items-center justify-center gap-2 group/wa shadow-[0_4px_16px_rgba(37,211,102,0.12)] hover:shadow-[0_4px_22px_rgba(37,211,102,0.4)] hover:-translate-y-0.5 active:scale-95 cursor-pointer min-h-[44px] min-w-0 box-border"
+                          >
+                            <MessageCircle size={14} className="text-[#25D366] group-hover/wa:text-[#0a0a0b] transition-colors shrink-0" />
+                            <span className="truncate">Book via WhatsApp</span>
+                          </a>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+              ) : null}
+            </motion.div>
+          )}
 
         </div>
       </div>
 
-      {/* Scroll indicator */}
+      {/* Scroll indicator — desktop only */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1, delay: 1.5 }}
-        className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-1.5 md:gap-2 text-[#6b6560]"
+        className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-30 hidden sm:flex flex-col items-center gap-1 text-[#6b6560] pointer-events-none"
       >
         <span className="text-[9px] md:text-[10px] tracking-[0.2em] uppercase">Scroll to Travel</span>
-        <div className="animate-bounce mt-1">
-          <ChevronDown size={16} className="md:w-[18px] md:h-[18px] text-[#c9a96e]" />
+        <div className="animate-bounce mt-0.5">
+          <ChevronDown size={16} className="text-[#c9a96e]" />
         </div>
       </motion.div>
+
+      {/* Modals */}
+      <AnimatePresence>
+        {selectedDestDetails && (
+          <TourDetailsModal
+            dest={selectedDestDetails}
+            onClose={() => setSelectedDestDetails(null)}
+            onOpenBook={setSelectedDestBook}
+          />
+        )}
+        {selectedDestBook && (
+          <BookModal
+            dest={selectedDestBook}
+            onClose={() => setSelectedDestBook(null)}
+          />
+        )}
+      </AnimatePresence>
     </section>
   );
 }

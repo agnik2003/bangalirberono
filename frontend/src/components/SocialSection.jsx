@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+﻿import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { ArrowRight, ExternalLink } from 'lucide-react';
 
@@ -141,3 +141,4 @@ export default function SocialSection() {
     </section>
   );
 }
+

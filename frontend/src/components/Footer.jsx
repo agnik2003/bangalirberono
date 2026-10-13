@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { Phone, MapPin, ArrowRight } from 'lucide-react';
 import { BRAND, NAV_LINKS } from '../data/constants';
 
@@ -46,7 +47,7 @@ export default function Footer() {
       {/* Background blob */}
       <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-[#c9a96e]/2 blur-3xl pointer-events-none" aria-hidden="true" />
 
-      <div className="max-w-[1400px] mx-auto px-6 pt-16 pb-32 md:pb-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 pt-12 sm:pt-16 pb-28 md:pb-8">
         {/* Main footer grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-14">
           {/* Brand column */}
@@ -57,7 +58,7 @@ export default function Footer() {
               aria-label="Back to top"
             >
               <img
-                src="/logo.png?v=3"
+                src="/logo.png?v=4"
                 alt="Bangalir Berano Logo"
                 className="w-12 h-12 rounded-full shadow-lg group-hover:shadow-[0_0_20px_rgba(201,169,110,0.4)] transition-shadow duration-300 object-cover"
               />
@@ -67,7 +68,7 @@ export default function Footer() {
               </div>
             </button>
             <p className="text-[13px] text-[#6b6560] leading-relaxed max-w-[220px] mb-5">
-              Thoughtfully planned journeys for every kind of traveller. Based in West Bengal, exploring India.
+              Comfortable, well-planned holidays for Bengali travellers and families. Based in West Bengal, exploring India together.
             </p>
             <a
               href={BRAND.phoneTel}
@@ -138,9 +139,8 @@ export default function Footer() {
                 <MapPin size={14} className="text-[#c9a96e]" />
               </div>
               <address className="text-[13px] text-[#6b6560] leading-relaxed not-italic">
-                B.G.G, 42, Sukanta Sarani,
-                <br />Bhadrakali, Uttarpara,
-                <br />Debaipukur, West Bengal 712232
+                42, B G G Sarani, Radha Neel Nibas, Bhadrakali, Hooghly, WB - 712232.
+                <br />Land Mark : Near Bhadrakali Youth Core Club.
               </address>
             </div>
 
@@ -157,8 +157,27 @@ export default function Footer() {
         {/* Divider */}
         <div className="section-divider mb-6" />
 
+        {/* Legal & Policy Compliance Links */}
+        <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-6 gap-y-2.5 mb-6 text-[12.5px] text-[#8a837c]">
+          <Link to="/terms" className="hover:text-[#c9a96e] transition-colors">
+            Terms &amp; Conditions
+          </Link>
+          <span className="text-white/10 hidden sm:inline">•</span>
+          <Link to="/privacy-policy" className="hover:text-[#c9a96e] transition-colors">
+            Privacy Policy
+          </Link>
+          <span className="text-white/10 hidden sm:inline">•</span>
+          <Link to="/refund-policy" className="hover:text-[#c9a96e] transition-colors">
+            Refund &amp; Cancellation Policy
+          </Link>
+          <span className="text-white/10 hidden sm:inline">•</span>
+          <Link to="/contact" className="hover:text-[#c9a96e] transition-colors">
+            Contact Us &amp; Support
+          </Link>
+        </div>
+
         {/* Bottom bar */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-20 md:pb-0">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-20 md:pb-0 pt-4 border-t border-white/5">
           <p className="text-[12px] text-[#6b6560] text-center md:text-left md:flex-1">
             © 2026 Bangalir Berano Tours &amp; Travels. All rights reserved.
           </p>
@@ -179,3 +198,4 @@ export default function Footer() {
     </footer>
   );
 }
+

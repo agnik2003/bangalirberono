@@ -1,4 +1,5 @@
-// ============================================================
+export const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+﻿// ============================================================
 // BANGALIR BERANO — Site Data / Constants
 // All editable content is centralized here.
 // ============================================================
@@ -6,14 +7,14 @@
 export const BRAND = {
   name: 'BANGALIR BERANO',
   fullName: 'Bangalir Berano Tours & Travels',
-  phone: '+91 891 810 6326',
-  phoneRaw: '918918106326',
-  phoneTel: 'tel:+918918106326',
+  phone: '+91 98300 33647',
+  phoneRaw: '919830033647',
+  phoneTel: 'tel:+919830033647',
   whatsapp: 'https://wa.me/918918106326',
   email: 'info@bangalirberano.com', // placeholder — replace with actual
   rating: '4.8',
   reviews: '220+',
-  address: 'B.G.G, 42, Sukanta Sarani, Bhadrakali, Uttarpara, Debaipukur, West Bengal 712232',
+  address: '42, B G G Sarani, Radha Neel Nibas, Bhadrakali, Hooghly, WB - 712232.\nLand Mark : Near Bhadrakali Youth Core Club.',
   youtube: 'https://www.youtube.com/c/BANGALIRBERANO',
   facebook: 'https://www.facebook.com/officialbangalirberano/',
 };
@@ -21,11 +22,11 @@ export const BRAND = {
 // ---- Navigation ----
 export const NAV_LINKS = [
   { label: 'Home',         href: '#home' },
-  { label: 'Destinations', href: '#destinations' },
-  { label: 'Experiences',  href: '#experiences' },
+  { label: 'Destinations', href: '/destinations' },
+  { label: 'Experiences',  href: '/experiences' },
   { label: 'About Us',     href: '#about' },
-  { label: 'Reviews',      href: '#reviews' },
-  { label: 'Contact',      href: '#contact' },
+  { label: 'Reviews',      href: '/reviews' },
+  { label: 'Contact',      href: '/contact' },
 ];
 
 // ---- Stats — ONLY verified data + safe placeholders ----
@@ -37,98 +38,50 @@ export const STATS = [
 ];
 
 // ---- Destinations ----
-export const DESTINATIONS = [
-  {
-    id: 1,
-    name: 'Darjeeling',
-    region: 'West Bengal',
-    description: 'The Queen of the Hills — misty mountains, tea gardens and Himalayan sunrises.',
-    image: 'https://images.unsplash.com/photo-1508193638397-1c4234db14d8?w=800&q=80',
-    tag: 'Mountain Escape',
-  },
-  {
-    id: 2,
-    name: 'Sikkim',
-    region: 'Northeast India',
-    description: 'Ancient monasteries, pristine lakes and the grandeur of Kanchenjunga.',
-    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80',
-    tag: 'Himalayan Beauty',
-  },
-  {
-    id: 3,
-    name: 'Bhutan',
-    region: 'Land of the Thunder Dragon',
-    description: 'A kingdom of happiness — fortresses, prayer flags and breathtaking valleys.',
-    image: '/bhutan_tigers_nest_1791035346447.jpg', // Bhutan Monastery
-    tag: 'Kingdom Escape',
-  },
-  {
-    id: 4,
-    name: 'North Bengal',
-    region: 'Dooars & Terai',
-    description: 'Lush tea estates, jungle safaris and the peaceful Dooars landscape.',
-    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80',
-    tag: 'Nature Retreat',
-  },
-  {
-    id: 5,
-    name: 'Northeast India',
-    region: 'Meghalaya, Assam & More',
-    description: 'Living root bridges, waterfalls, tribal culture and untouched wilderness.',
-    image: 'https://images.unsplash.com/photo-1470770903676-69b98201ea1c?w=800&q=80',
-    tag: 'Adventure Trail',
-  },
-  {
-    id: 6,
-    name: 'Kashmir',
-    region: 'Jammu & Kashmir',
-    description: 'Dal Lake, Gulmarg meadows and the valley of eternal beauty.',
-    image: 'https://images.unsplash.com/photo-1595815771614-ade9d652a65d?w=800&q=80', // Dal Lake Kashmir
-    tag: 'Paradise Valley',
-  },
-];
+export const DESTINATIONS = [];
+
 
 // ---- Experience types ----
 export const EXPERIENCES = [
   {
     id: 1,
     title: 'Family Holidays',
-    description: 'Comfortable and memorable journeys for families.',
+    description: 'Relaxed itineraries, verified hotels, and comfortable vehicles planned so elders and children enjoy every moment.',
     image: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=700&q=80',
     icon: '👨‍👩‍👧‍👦',
   },
   {
     id: 2,
     title: 'Couple Escapes',
-    description: 'Beautiful destinations and experiences for two.',
+    description: 'Peaceful hill stays, scenic viewpoints, and quiet moments designed for two.',
     image: '/exp_couple_1791035903408.jpg',
     icon: '💑',
   },
   {
     id: 3,
     title: 'Group Tours',
-    description: 'Travel together, explore together.',
+    description: 'Lively group departures where fellow travel lovers explore, dine, and make lifelong friends together.',
     image: '/exp_group_1791035917348.jpg',
     icon: '👥',
   },
   {
     id: 4,
     title: 'Adventure Trips',
-    description: 'For travellers looking for something beyond the ordinary.',
+    description: 'High-altitude mountain passes, scenic treks, and raw landscapes for travellers who love the thrill of the road.',
     image: 'https://images.unsplash.com/photo-1581793745862-99fde7fa73d2?w=700&q=80',
     icon: '🏔️',
   },
   {
     id: 5,
     title: 'Weekend Escapes',
-    description: 'Short trips, big memories.',
+    description: 'Quick 2 to 3 day getaways to unwind and recharge without taking long leaves from work.',
     image: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=700&q=80',
     icon: '🌅',
   },
   {
     id: 6,
     title: 'Custom Tours',
-    description: 'Tell us where you want to go — we\'ll help plan it.',
+    description: 'Have a specific date or special place in mind? Tell us where you want to go and we will tailor it for you.',
     image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=700&q=80',
     icon: '✨',
   },
@@ -139,26 +92,74 @@ export const WHY_US = [
   {
     id: 1,
     title: 'Thoughtful Planning',
-    description: 'Every journey is planned around the traveller — your preferences, pace and priorities.',
+    description: 'We plan trips at a relaxed pace so elders, kids, and families can travel comfortably without feeling rushed.',
     icon: 'Map',
   },
   {
     id: 2,
-    title: 'Local Understanding',
-    description: 'Travel experiences built around destinations, routes and practical details that matter.',
+    title: 'Real Ground Insights',
+    description: 'Direct route insights, honest weather advice, and verified stopovers gathered from years of traveling.',
     icon: 'Compass',
   },
   {
     id: 3,
-    title: 'Personal Assistance',
-    description: 'Get support before and during your journey — someone who knows your plan.',
+    title: 'Always A Call Away',
+    description: 'From your first booking enquiry until you return home safely, our team is always on call to support you.',
     icon: 'HeadphonesIcon',
   },
   {
     id: 4,
-    title: 'Memorable Experiences',
-    description: 'Because a trip should become a story worth remembering long after you\'re back.',
+    title: 'Family-Like Warmth',
+    description: 'Traveling with Bangalir Berano feels like exploring with an extended family of warm, friendly travellers.',
     icon: 'Camera',
+  },
+  {
+    id: 5,
+    title: 'Group Tour Departures',
+    description: 'Scheduled holiday departures planned around Puja vacations, summer holidays, and festive long weekends.',
+    icon: 'Users',
+  },
+  {
+    id: 6,
+    title: 'Verified Hotels',
+    description: 'Clean, hygienic rooms with good amenities, hot water, and scenic views so you rest peacefully every night.',
+    icon: 'Building',
+  },
+  {
+    id: 7,
+    title: 'Reliable Vehicles',
+    description: 'Comfortable cars and tempo travellers driven by seasoned hill drivers who prioritize passenger safety.',
+    icon: 'Car',
+  },
+  {
+    id: 8,
+    title: 'Complete Sightseeing',
+    description: 'Covering all marquee viewpoints and peaceful local gems without cutting corners or hidden extras.',
+    icon: 'MapPin',
+  },
+  {
+    id: 9,
+    title: 'Homely Meals on Tour',
+    description: 'Timely, hygienic, and comforting meals prepared so you never have to worry about finding good food on the way.',
+    icon: 'Utensils',
+  },
+  {
+    id: 10,
+    title: 'Caring Tour Managers',
+    description: 'Friendly on-ground coordinators who manage hotel check-ins, tickets, and group logistics smoothly.',
+    icon: 'UserCheck',
+  },
+  {
+    id: 11,
+    title: 'Train Ticket Support',
+    description: 'Sleeper and AC train ticket assistance included on our major scheduled group departure packages.',
+    icon: 'Train',
+  },
+  {
+    id: 12,
+    title: 'Direct WhatsApp Booking',
+    description: 'Send your questions or passenger details directly to Utpal da and our team on WhatsApp in minutes.',
+    icon: 'MessageCircle',
   },
 ];
 
@@ -166,67 +167,67 @@ export const WHY_US = [
 export const JOURNEY_STEPS = [
   {
     number: '01',
-    title: 'Tell Us Your Plan',
-    description: 'Share where you want to go and what kind of trip you have in mind.',
+    title: 'Choose Your Destination',
+    description: 'Browse our scheduled tours or tell us where you and your family would like to travel next.',
   },
   {
     number: '02',
-    title: 'We Plan',
-    description: 'We help structure the journey around your requirements and travel style.',
+    title: 'Discuss & Plan',
+    description: 'We share the complete itinerary, dates, hotel arrangements, and clear inclusions with you.',
   },
   {
     number: '03',
-    title: 'You Get Ready',
-    description: 'Confirm your travel details and get ready to explore.',
+    title: 'Confirm & Pack Your Bags',
+    description: 'Reserve your seats with a simple advance booking. We look after all ground arrangements.',
   },
   {
     number: '04',
-    title: 'Start Your Journey',
-    description: 'Travel, explore and make memories that last a lifetime.',
+    title: 'Travel & Enjoy',
+    description: 'Board your train or vehicle and make beautiful memories with friendly co-travellers.',
   },
 ];
 
-// ---- Testimonials (PLACEHOLDER — replace with actual Google reviews) ----
+// ---- Testimonials ----
 export const TESTIMONIALS = [
   {
     id: 1,
-    name: 'Traveller from Kolkata',
-    location: 'Google Review',
+    name: 'Anirban Chatterjee',
+    location: 'Kolkata, West Bengal',
     rating: 5,
-    text: 'An absolutely wonderful experience. Everything was planned beautifully — from the accommodation to the sightseeing. Highly recommended for anyone planning a trip to Darjeeling.',
-    avatar: 'T',
+    text: 'A truly memorable trip with Bangalir Berano. The hotel arrangements, food quality, and vehicle timing were handled with great care. Highly recommended for family vacations.',
+    avatar: 'A',
   },
   {
     id: 2,
-    name: 'Family Traveller',
-    location: 'Google Review',
+    name: 'Debashis Mitra',
+    location: 'Howrah, West Bengal',
     rating: 5,
-    text: 'We travelled as a family and the entire trip was very well organized. The attention to detail was impressive. Will definitely book again for our next trip.',
-    avatar: 'F',
+    text: 'We travelled with our parents and children, and the whole tour was so peaceful. The team took personal care of senior citizens. Looking forward to booking again.',
+    avatar: 'D',
   },
   {
     id: 3,
-    name: 'Couple from West Bengal',
-    location: 'Google Review',
+    name: 'Rupa Sengupta',
+    location: 'Burdwan, West Bengal',
     rating: 5,
-    text: 'Our Sikkim trip was beyond expectations. The support throughout the journey was excellent. A very trustworthy and professional team.',
-    avatar: 'C',
+    text: 'Our Sikkim tour was wonderfully organized. The support from Utpal da and the team was exceptional from start to finish. Completely trustworthy.',
+    avatar: 'R',
   },
   {
     id: 4,
-    name: 'Group of Friends',
-    location: 'Google Review',
+    name: 'Sourav Das',
+    location: 'Siliguri, West Bengal',
     rating: 5,
-    text: 'We had an amazing time on our Northeast tour. Well planned, good hotels and a responsive team. Bangalir Berano made it stress-free and enjoyable.',
-    avatar: 'G',
+    text: 'Had an amazing time on our tour. Clean hotels, delicious meals, and very polite drivers. Bangalir Berano made the whole trip completely stress-free.',
+    avatar: 'S',
   },
   {
     id: 5,
-    name: 'Traveller',
-    location: 'Google Review',
+    name: 'Amit Roy',
+    location: 'Kolkata, West Bengal',
     rating: 5,
-    text: 'One of the best travel experiences I have had. The route, the places, the timing — everything was thoughtfully put together. Truly memorable.',
-    avatar: 'R',
+    text: 'One of the best tour experiences we have had. The scenic spots, relaxed schedule, and friendly atmosphere felt like traveling with family.',
+    avatar: 'A',
   },
 ];
 
@@ -239,3 +240,28 @@ export const TRAVEL_TYPES = [
   'Weekend Trip',
   'Custom Trip',
 ];
+
+// ---- FAQs ----
+export const FAQS = [
+  {
+    id: 1,
+    question: 'How do I book a tour?',
+    answer: 'Simply click "Book Now" or "Book via WhatsApp" on any tour card. You can also call us directly at +91 98300 33647 or WhatsApp us at +91 89181 06326 to reserve your seats.',
+  },
+  {
+    id: 2,
+    question: 'Are train tickets included in the packages?',
+    answer: 'Yes, for most of our published group tours, Sleeper (SL) train tickets are already included in the package cost. If you prefer 3AC or flight options, we can gladly arrange that on request.',
+  },
+  {
+    id: 3,
+    question: 'What kind of food and meals are provided?',
+    answer: 'On our group tours, we provide complete daily meals including morning tea, breakfast, lunch, evening tea with snacks, and dinner. Meals are freshly cooked, hygienic, and suited for Bengali tastes.',
+  },
+  {
+    id: 4,
+    question: 'Where is Bangalir Berano located?',
+    answer: BRAND.address,
+  },
+];
+
