@@ -38,17 +38,10 @@ const parseList = (val) => {
   return val.split('\n').map(s => s.trim()).filter(Boolean);
 };
 
-// In-memory cache for high performance
-let packageCache = null;
-
 // ── Controllers ───────────────────────────────────────────────────────────────
 exports.getPackages = async (req, res) => {
   try {
-    if (packageCache) {
-      return res.status(200).json({ success: true, data: packageCache });
-    }
     const packages = await Package.find().sort({ sortOrder: 1, createdAt: -1 }).lean();
-    packageCache = packages;
     res.status(200).json({ success: true, data: packages });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -57,7 +50,6 @@ exports.getPackages = async (req, res) => {
 
 exports.reorderPackages = async (req, res) => {
   try {
-    packageCache = null;
     console.log('Reorder endpoint hit! Body:', req.body);
     const { orderedIds } = req.body; // array of _id strings in new order
     if (!Array.isArray(orderedIds)) return res.status(400).json({ success: false, error: 'orderedIds must be an array' });
@@ -72,7 +64,6 @@ exports.reorderPackages = async (req, res) => {
 
 exports.createPackage = async (req, res) => {
   try {
-    packageCache = null;
     const body = { ...req.body };
 
     // If a file was uploaded, convert it to base64 and store in DB
@@ -99,7 +90,6 @@ exports.createPackage = async (req, res) => {
 
 exports.updatePackage = async (req, res) => {
   try {
-    packageCache = null;
     const body = { ...req.body };
 
     // If a new file was uploaded, convert to base64 and overwrite image
@@ -128,7 +118,6 @@ exports.updatePackage = async (req, res) => {
 
 exports.deletePackage = async (req, res) => {
   try {
-    packageCache = null;
     const deleted = await Package.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ success: false, error: 'Package not found' });
     res.status(200).json({ success: true, message: 'Package deleted' });

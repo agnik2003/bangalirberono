@@ -72,11 +72,27 @@ export default function App() {
     const handleKeyDown = (e) => {
       if (e.key === 'Tab') document.body.classList.remove('using-mouse');
     };
+    
+    // Interactive cursor click feedback
+    const handleClick = (e) => {
+      if (!e || typeof e.clientX !== 'number') return;
+      const ripple = document.createElement('div');
+      ripple.className = 'cursor-click-ripple';
+      ripple.style.left = `${e.clientX}px`;
+      ripple.style.top = `${e.clientY}px`;
+      document.body.appendChild(ripple);
+      setTimeout(() => {
+        ripple.remove();
+      }, 550);
+    };
+
     window.addEventListener('mousedown', handleMouseDown);
     window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('click', handleClick);
     return () => {
       window.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('click', handleClick);
     };
   }, []);
 

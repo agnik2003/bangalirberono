@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   LogOut, LayoutDashboard, Settings, Users, Image as ImageIcon,
   Calendar, Edit3, Trash2, CheckCircle, XCircle, Plus, X,
-  Upload, Loader2, AlertCircle, ChevronDown, ChevronUp, List, FileText, FilePlus, Printer, Search, Bell, MapPin
+  Upload, Loader2, AlertCircle, ChevronDown, ChevronUp, List, FileText, FilePlus, Printer, Search, Bell, MapPin, RefreshCw
 } from 'lucide-react';
 import { BRAND, EXPERIENCES, API, authFetch } from '../data/constants';
 import BillModal from '../components/BillModal';
@@ -809,12 +809,18 @@ Thank you for choosing Bangalir Berano!`;
   const fetchPackages = useCallback(async () => {
     setLoadingPackages(true);
     try {
-      const res = await authFetch(`${API}/packages`, {
-        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' }
+      const res = await authFetch(`${API}/packages?t=${Date.now()}`, {
+        cache: 'no-store'
       });
       const data = await res.json();
-      if (data.success) setPackages(data.data);
-    } catch { } finally { setLoadingPackages(false); }
+      if (data.success && Array.isArray(data.data)) {
+        setPackages(data.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch packages:', err);
+    } finally {
+      setLoadingPackages(false);
+    }
   }, []);
 
   const fetchCategories = useCallback(async () => {
@@ -1033,6 +1039,7 @@ Thank you for choosing Bangalir Berano!`;
                     window.open('/admin/all-customers', '_blank');
                   } else {
                     setActiveTab(id);
+                    if (id === 'packages') fetchPackages();
                   }
                 }}
                   className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-colors ${activeTab === id ? 'bg-indigo-50 text-indigo-600' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
@@ -1590,10 +1597,17 @@ Thank you for choosing Bangalir Berano!`;
                 <h2 className="text-xl font-bold text-slate-900">Manage Packages</h2>
                 <p className="text-slate-500 text-sm mt-1">{packages.length} package{packages.length !== 1 ? 's' : ''} in database</p>
               </div>
-              <button onClick={() => { setEditingPackage(null); setShowPackageForm(true); }}
-                className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-bold py-2.5 px-5 rounded-xl text-sm transition-transform hover:-translate-y-0.5 shadow-lg">
-                <Plus size={15} /> Add New Package
-              </button>
+              <div className="flex items-center gap-3">
+                <button onClick={fetchPackages}
+                  title="Refresh Packages"
+                  className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-2.5 px-4 rounded-xl text-sm transition-all shadow-sm">
+                  <RefreshCw size={14} className={loadingPackages ? 'animate-spin' : ''} /> Refresh
+                </button>
+                <button onClick={() => { setEditingPackage(null); setShowPackageForm(true); }}
+                  className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-bold py-2.5 px-5 rounded-xl text-sm transition-transform hover:-translate-y-0.5 shadow-lg">
+                  <Plus size={15} /> Add New Package
+                </button>
+              </div>
             </div>
 
             {loadingPackages ? (
@@ -1605,10 +1619,16 @@ Thank you for choosing Bangalir Berano!`;
                 <ImageIcon size={44} className="text-slate-400 mx-auto mb-4" />
                 <h3 className="text-slate-900 font-bold text-lg mb-2">No packages yet</h3>
                 <p className="text-slate-500 text-sm mb-6">Add your first tour package to get started.</p>
-                <button onClick={() => { setEditingPackage(null); setShowPackageForm(true); }}
-                  className="flex items-center gap-2 mx-auto bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-bold py-2.5 px-6 rounded-xl text-sm">
-                  <Plus size={15} /> Add First Package
-                </button>
+                <div className="flex items-center justify-center gap-3">
+                  <button onClick={fetchPackages}
+                    className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-2.5 px-5 rounded-xl text-sm">
+                    <RefreshCw size={14} /> Refresh
+                  </button>
+                  <button onClick={() => { setEditingPackage(null); setShowPackageForm(true); }}
+                    className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-bold py-2.5 px-6 rounded-xl text-sm">
+                    <Plus size={15} /> Add First Package
+                  </button>
+                </div>
               </div>
             ) : (
               <div>

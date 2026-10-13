@@ -135,10 +135,10 @@ export default function PrivacyPolicyPage() {
               If you have any questions, concerns, or grievances regarding our privacy practices, please contact our designated Grievance Team:
             </p>
             <div className="bg-[#191920] border border-white/5 rounded-xl p-4 text-sm space-y-1 text-[#a09a8e]">
-              <p><strong className="text-white">Bangalir Berano Tours &amp; Travels</strong></p>
+              <p><strong className="text-white">Bangalir Berano<sup className="text-[10px] font-bold text-[#c9a96e] ml-0.5">TM</sup> Tours &amp; Travels</strong></p>
               <p>Email: <a href={`mailto:${BRAND.email}`} className="text-[#c9a96e] hover:underline">{BRAND.email}</a></p>
               <p>Phone: <a href={BRAND.phoneTel} className="text-[#c9a96e] hover:underline">{BRAND.phone}</a></p>
-              <p>Address: 42, B G G Sarani, Radha Neel Nibas, Bhadrakali, Hooghly, WB - 712232</p>
+              <p>Address: 42, B G G Sarani, Radha Neel Nibas-II, Bhadrakali, Uttarpara, Hooghly, WB - 712232 (Land Mark : Near Bhadrakali Youth Core Club)</p>
             </div>
           </section>
 

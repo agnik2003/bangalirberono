@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Star, MapPin, ChevronDown, Info, Calendar, MessageCircle, Flame, Users, AlertCircle } from 'lucide-react';
+import { ArrowRight, Star, MapPin, ChevronDown, ChevronLeft, ChevronRight, Info, Calendar, MessageCircle, Flame, Users, AlertCircle } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { API } from '../data/constants';
@@ -19,7 +19,7 @@ export default function Hero() {
   const [currentDestIndex, setCurrentDestIndex] = useState(0);
   const [selectedDestDetails, setSelectedDestDetails] = useState(null);
   const [selectedDestBook, setSelectedDestBook] = useState(null);
-  const [isPaused, setIsPaused] = useState(false);
+  const [resetTimerKey, setResetTimerKey] = useState(0);
 
   // ── Fetch packages from backend ──────────────────────────────────────────
   useEffect(() => {
@@ -40,15 +40,44 @@ export default function Hero() {
     fetchPackages();
   }, []);
 
-  // ── Auto-rotate carousel ─────────────────────────────────────────────────
+  // ── Auto-rotate carousel (Runs continuously + works with manual clicks) ──
   const displayList = packages;
   useEffect(() => {
-    if (displayList.length <= 1 || isPaused || selectedDestDetails || selectedDestBook) return;
+    if (displayList.length <= 1 || selectedDestDetails || selectedDestBook) return;
     const timer = setInterval(() => {
       setCurrentDestIndex(prev => (prev + 1) % displayList.length);
     }, 4000);
     return () => clearInterval(timer);
-  }, [displayList.length, isPaused, selectedDestDetails, selectedDestBook]);
+  }, [displayList.length, resetTimerKey, selectedDestDetails, selectedDestBook]);
+
+  const handlePrev = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (displayList.length <= 1) return;
+    setCurrentDestIndex(prev => (prev - 1 + displayList.length) % displayList.length);
+    setResetTimerKey(k => k + 1);
+  };
+
+  const handleNext = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (displayList.length <= 1) return;
+    setCurrentDestIndex(prev => (prev + 1) % displayList.length);
+    setResetTimerKey(k => k + 1);
+  };
+
+  const handleSelectSlide = (idx, e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setCurrentDestIndex(idx);
+    setResetTimerKey(k => k + 1);
+  };
 
   const currentDest = displayList.length > 0
     ? (displayList[currentDestIndex % displayList.length] || displayList[0])
@@ -215,8 +244,6 @@ export default function Hero() {
                 </div>
               ) : currentDest ? (
                 <div
-                  onMouseEnter={() => setIsPaused(true)}
-                  onMouseLeave={() => setIsPaused(false)}
                   className="w-full max-w-[380px] sm:max-w-sm lg:max-w-md bg-[#141419]/95 rounded-2xl md:rounded-3xl overflow-hidden border border-[#c9a96e]/25 shadow-[0_20px_50px_rgba(0,0,0,0.7),0_0_30px_rgba(201,169,110,0.08)] flex flex-col mx-auto lg:mx-0 box-border min-w-0"
                 >
                   <AnimatePresence mode="wait">
@@ -291,6 +318,30 @@ export default function Hero() {
                             <Info size={12} className="text-[#c9a96e]" /> Click for Tour Details
                           </span>
                         </div>
+
+                        {/* Prev & Next Carousel Buttons */}
+                        {displayList.length > 1 && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={handlePrev}
+                              className="absolute left-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/75 hover:bg-[#c9a96e] text-white hover:text-[#0a0a0b] border border-white/20 hover:border-[#c9a96e] backdrop-blur-md flex items-center justify-center transition-all duration-200 shadow-[0_4px_12px_rgba(0,0,0,0.6)] active:scale-90 cursor-pointer group/nav"
+                              aria-label="Previous tour package"
+                              title="Previous Tour"
+                            >
+                              <ChevronLeft size={18} className="transition-transform group-hover/nav:-translate-x-0.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleNext}
+                              className="absolute right-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/75 hover:bg-[#c9a96e] text-white hover:text-[#0a0a0b] border border-white/20 hover:border-[#c9a96e] backdrop-blur-md flex items-center justify-center transition-all duration-200 shadow-[0_4px_12px_rgba(0,0,0,0.6)] active:scale-90 cursor-pointer group/nav"
+                              aria-label="Next tour package"
+                              title="Next Tour"
+                            >
+                              <ChevronRight size={18} className="transition-transform group-hover/nav:translate-x-0.5" />
+                            </button>
+                          </>
+                        )}
                       </div>
 
                       {/* Card info panel */}
@@ -344,6 +395,59 @@ export default function Hero() {
                             <MessageCircle size={14} className="text-[#25D366] group-hover/wa:text-[#0a0a0b] transition-colors shrink-0" />
                             <span className="truncate">Book via WhatsApp</span>
                           </a>
+
+                          {/* Slide Pagination & Navigation Controls */}
+                          {displayList.length > 1 && (
+                            <div className="flex items-center justify-between pt-2 px-0.5 border-t border-white/5 mt-0.5">
+                              {/* Clickable indicator dots */}
+                              <div className="flex items-center gap-1.5" role="tablist" aria-label="Tour slides">
+                                {displayList.map((_, idx) => {
+                                  const isActive = idx === (currentDestIndex % displayList.length);
+                                  return (
+                                    <button
+                                      key={idx}
+                                      type="button"
+                                      onClick={(e) => handleSelectSlide(idx, e)}
+                                      className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                                        isActive
+                                          ? 'w-6 bg-gradient-to-r from-[#c9a96e] to-[#e07b39] shadow-[0_0_8px_rgba(201,169,110,0.8)]'
+                                          : 'w-1.5 bg-white/25 hover:bg-white/50'
+                                      }`}
+                                      aria-label={`Go to tour slide ${idx + 1}`}
+                                      title={`Tour ${idx + 1}`}
+                                    />
+                                  );
+                                })}
+                              </div>
+
+                              {/* Counter & quick step buttons */}
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10.5px] font-mono font-semibold tracking-wider text-[#a09a8e] bg-white/5 px-2 py-0.5 rounded-md border border-white/10">
+                                  <span className="text-[#c9a96e] font-bold">{String((currentDestIndex % displayList.length) + 1).padStart(2, '0')}</span> / {String(displayList.length).padStart(2, '0')}
+                                </span>
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={handlePrev}
+                                    className="w-6 h-6 rounded-md bg-white/5 hover:bg-[#c9a96e] text-[#a09a8e] hover:text-[#0a0a0b] flex items-center justify-center transition-colors cursor-pointer text-xs"
+                                    title="Previous tour"
+                                    aria-label="Previous tour"
+                                  >
+                                    <ChevronLeft size={13} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={handleNext}
+                                    className="w-6 h-6 rounded-md bg-white/5 hover:bg-[#c9a96e] text-[#a09a8e] hover:text-[#0a0a0b] flex items-center justify-center transition-colors cursor-pointer text-xs"
+                                    title="Next tour"
+                                    aria-label="Next tour"
+                                  >
+                                    <ChevronRight size={13} />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </motion.div>

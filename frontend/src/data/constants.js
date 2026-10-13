@@ -30,10 +30,10 @@ export const BRAND = {
   phoneRaw: '919830033647',
   phoneTel: 'tel:+919830033647',
   whatsapp: 'https://wa.me/918918106326',
-  email: 'info@bangalirberano.com', // placeholder — replace with actual
+  email: 'contact@bangalirberano.com',
   rating: '4.8',
   reviews: '220+',
-  address: '42, B G G Sarani, Radha Neel Nibas, Bhadrakali, Hooghly, WB - 712232.\nLand Mark : Near Bhadrakali Youth Core Club.',
+  address: '42, B G G Sarani, Radha Neel Nibas-II, Bhadrakali, Uttarpara, Hooghly, WB - 712232.\nLand Mark : Near Bhadrakali Youth Core Club.',
   youtube: 'https://www.youtube.com/c/BANGALIRBERANO',
   facebook: 'https://www.facebook.com/officialbangalirberano/',
 };
@@ -275,7 +275,7 @@ export const FAQS = [
   {
     id: 3,
     question: 'What kind of food and meals are provided?',
-    answer: 'On our group tours, we provide complete daily meals including morning tea, breakfast, lunch, evening tea with snacks, and dinner. Meals are freshly cooked, hygienic, and suited for Bengali tastes.',
+    answer: 'On our group tour packages, daily breakfast and dinner are provided as standard (MAP plan). Lunch is provided based on the specific itinerary and travel transit schedule (it may or may not be included on certain transit or free sightseeing days). All meals are freshly cooked, hygienic, and tailored to Bengali tastes.',
   },
   {
     id: 4,

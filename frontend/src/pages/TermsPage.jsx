@@ -42,7 +42,7 @@ export default function TermsPage() {
               Introduction &amp; Scope of Service
             </h2>
             <p>
-              Bangalir Berano Tours &amp; Travels (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is a registered travel and holiday organizer based in West Bengal, India. We organize fixed-departure group tours, customized family holiday packages, transport arrangements, hotel accommodations, and guided travel itineraries across India and neighboring tourist regions.
+              Bangalir Berano<sup className="text-[10px] font-bold text-[#c9a96e] ml-0.5">TM</sup> Tours &amp; Travels (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is a registered travel and holiday organizer based in West Bengal, India. We organize fixed-departure group tours, customized family holiday packages, transport arrangements, hotel accommodations, and guided travel itineraries across India and neighboring tourist regions.
             </p>
             <p>
               By accessing our website (<span className="text-white font-medium">bangalirberano.com</span>), booking a package via WhatsApp, phone, email, or in-person at our registered office, you enter into a binding agreement with us under these terms.
@@ -59,7 +59,7 @@ export default function TermsPage() {
             </h2>
             <ul className="list-disc pl-5 space-y-2 text-[#a09a8e]">
               <li><strong className="text-white">Booking Advance:</strong> A seat or tour booking is considered confirmed only upon receipt of the designated booking advance payment per person.</li>
-              <li><strong className="text-white">Balance Payment:</strong> The remaining package balance must be settled in full at least 15 days prior to the tour departure date, or as explicitly indicated on your booking invoice.</li>
+              <li><strong className="text-white">Balance Payment:</strong> The remaining package balance must be settled in full at least 30 days prior to the tour departure date, or as explicitly indicated on your booking invoice.</li>
               <li><strong className="text-white">Payment Methods:</strong> We accept payments through official bank NEFT/IMPS transfers, UPI, registered payment gateways, and official agency payment links. Please retain your payment receipt or transaction ID for all verification.</li>
               <li><strong className="text-white">Price Inclusions:</strong> All package costs quoted are per person based on double/triple sharing unless specifically arranged otherwise. Taxes, government permits, entry fees, and included meals are outlined in each tour voucher.</li>
             </ul>
@@ -71,6 +71,25 @@ export default function TermsPage() {
           <section className="space-y-3">
             <h2 className="text-xl sm:text-2xl font-display font-bold text-white flex items-center gap-2.5 text-[#c9a96e]">
               <span className="text-sm font-sans px-2.5 py-1 rounded-md bg-[#c9a96e]/15 border border-[#c9a96e]/30 text-[#c9a96e]">3</span>
+              Food &amp; Meal Services Policy
+            </h2>
+            <p>
+              To ensure wholesome, hygienic, and convenient dining while on tour, our food policy operates as follows:
+            </p>
+            <ul className="list-disc pl-5 space-y-2 text-[#a09a8e]">
+              <li><strong className="text-white">Breakfast &amp; Dinner Included:</strong> Daily fresh breakfast and dinner are provided as standard components in our fixed group tour packages (MAP plan), served at our hotel accommodations or authorized tour bases.</li>
+              <li><strong className="text-white">Lunch Arrangements:</strong> Daily lunch is organized based on the specific travel schedule and sightseeing route. On long transit journeys, mountain excursions, or free sightseeing days, lunch may or may not be provided by the agency (guests can dine at verified en-route local restaurants or as designated in the day-by-day tour itinerary voucher).</li>
+              <li><strong className="text-white">Hygienic Bengali &amp; Regional Cuisine:</strong> Meals served are fresh, hygienic, and prepared to suit Bengali family tastes with wholesome vegetarian and non-vegetarian options wherever available.</li>
+              <li><strong className="text-white">Special Dietary Needs:</strong> Travellers with strict dietary restrictions, food allergies, or pure vegetarian/Jain preferences are kindly requested to notify our team at the time of booking.</li>
+            </ul>
+          </section>
+
+          <div className="h-px bg-white/5" />
+
+          {/* Section 4 */}
+          <section className="space-y-3">
+            <h2 className="text-xl sm:text-2xl font-display font-bold text-white flex items-center gap-2.5 text-[#c9a96e]">
+              <span className="text-sm font-sans px-2.5 py-1 rounded-md bg-[#c9a96e]/15 border border-[#c9a96e]/30 text-[#c9a96e]">4</span>
               Traveller Identification &amp; Mandatory Documents
             </h2>
             <p>
@@ -83,10 +102,10 @@ export default function TermsPage() {
 
           <div className="h-px bg-white/5" />
 
-          {/* Section 4 */}
+          {/* Section 5 */}
           <section className="space-y-3">
             <h2 className="text-xl sm:text-2xl font-display font-bold text-white flex items-center gap-2.5 text-[#c9a96e]">
-              <span className="text-sm font-sans px-2.5 py-1 rounded-md bg-[#c9a96e]/15 border border-[#c9a96e]/30 text-[#c9a96e]">4</span>
+              <span className="text-sm font-sans px-2.5 py-1 rounded-md bg-[#c9a96e]/15 border border-[#c9a96e]/30 text-[#c9a96e]">5</span>
               Itinerary Modifications &amp; Force Majeure
             </h2>
             <p>
@@ -105,10 +124,10 @@ export default function TermsPage() {
 
           <div className="h-px bg-white/5" />
 
-          {/* Section 5 */}
+          {/* Section 6 */}
           <section className="space-y-3">
             <h2 className="text-xl sm:text-2xl font-display font-bold text-white flex items-center gap-2.5 text-[#c9a96e]">
-              <span className="text-sm font-sans px-2.5 py-1 rounded-md bg-[#c9a96e]/15 border border-[#c9a96e]/30 text-[#c9a96e]">5</span>
+              <span className="text-sm font-sans px-2.5 py-1 rounded-md bg-[#c9a96e]/15 border border-[#c9a96e]/30 text-[#c9a96e]">6</span>
               Health, Fitness &amp; Conduct During Tours
             </h2>
             <p>
@@ -121,10 +140,10 @@ export default function TermsPage() {
 
           <div className="h-px bg-white/5" />
 
-          {/* Section 6 */}
+          {/* Section 7 */}
           <section className="space-y-3">
             <h2 className="text-xl sm:text-2xl font-display font-bold text-white flex items-center gap-2.5 text-[#c9a96e]">
-              <span className="text-sm font-sans px-2.5 py-1 rounded-md bg-[#c9a96e]/15 border border-[#c9a96e]/30 text-[#c9a96e]">6</span>
+              <span className="text-sm font-sans px-2.5 py-1 rounded-md bg-[#c9a96e]/15 border border-[#c9a96e]/30 text-[#c9a96e]">7</span>
               Limitation of Liability &amp; Insurance
             </h2>
             <p>
@@ -137,10 +156,10 @@ export default function TermsPage() {
 
           <div className="h-px bg-white/5" />
 
-          {/* Section 7 */}
+          {/* Section 8 */}
           <section className="space-y-3">
             <h2 className="text-xl sm:text-2xl font-display font-bold text-white flex items-center gap-2.5 text-[#c9a96e]">
-              <span className="text-sm font-sans px-2.5 py-1 rounded-md bg-[#c9a96e]/15 border border-[#c9a96e]/30 text-[#c9a96e]">7</span>
+              <span className="text-sm font-sans px-2.5 py-1 rounded-md bg-[#c9a96e]/15 border border-[#c9a96e]/30 text-[#c9a96e]">8</span>
               Governing Law &amp; Dispute Resolution
             </h2>
             <p>

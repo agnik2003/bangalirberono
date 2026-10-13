@@ -63,7 +63,9 @@ export default function Footer() {
                 className="w-12 h-12 rounded-full shadow-lg group-hover:shadow-[0_0_20px_rgba(201,169,110,0.4)] transition-shadow duration-300 object-cover"
               />
               <div>
-                <p className="text-[11px] font-bold tracking-[0.2em] text-[#c9a96e] uppercase">Bangalir Berano</p>
+                <p className="text-[11px] font-bold tracking-[0.2em] text-[#c9a96e] uppercase flex items-center">
+                  Bangalir Berano<sup className="text-[7.5px] font-bold ml-0.5 -top-1 relative">TM</sup>
+                </p>
                 <p className="text-[10px] text-[#6b6560] tracking-wider">Tours &amp; Travels</p>
               </div>
             </button>
@@ -139,7 +141,7 @@ export default function Footer() {
                 <MapPin size={14} className="text-[#c9a96e]" />
               </div>
               <address className="text-[13px] text-[#6b6560] leading-relaxed not-italic">
-                42, B G G Sarani, Radha Neel Nibas, Bhadrakali, Hooghly, WB - 712232.
+                42, B G G Sarani, Radha Neel Nibas-II, Bhadrakali, Uttarpara, Hooghly, WB - 712232.
                 <br />Land Mark : Near Bhadrakali Youth Core Club.
               </address>
             </div>

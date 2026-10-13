@@ -64,10 +64,12 @@ export default function BillPrintPage() {
           <div>
             <div className="flex items-center gap-3 mb-2">
               <img src="/logo.png?v=4" alt="Bangalir Berano Logo" className="h-8 w-8 rounded-full object-cover" />
-              <h1 className="text-xl font-extrabold text-indigo-900 uppercase tracking-wider">BANGALIR BERANO</h1>
+              <h1 className="text-xl font-extrabold text-indigo-900 uppercase tracking-wider flex items-baseline">
+                BANGALIR BERANO<sup className="text-[10px] font-bold text-indigo-900 ml-0.5 -top-1 relative">TM</sup>
+              </h1>
             </div>
             <p className="text-sm font-semibold text-slate-700">Tours and Travels Operator</p>
-            <p className="text-xs text-slate-600 mt-1">42, B G G Sarani, Radha Neel Nibas, Bhadrakali, Hooghly, WB - 712232.<br/>Land Mark : Near Bhadrakali Youth Core Club.</p>
+            <p className="text-xs text-slate-600 mt-1">42, B G G Sarani, Radha Neel Nibas-II, Bhadrakali, Uttarpara, Hooghly, WB - 712232.<br/>Land Mark : Near Bhadrakali Youth Core Club.</p>
           </div>
           <div className="text-right text-xs text-slate-600 space-y-1 mt-2">
             <p><span className="font-bold">MSME:</span> UDYAM-WB-07-0135043</p>

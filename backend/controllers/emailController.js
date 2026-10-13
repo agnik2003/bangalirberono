@@ -130,7 +130,7 @@ exports.sendBillEmail = async (req, res) => {
     <div style="background:#f8fafc;padding:20px 32px;border-top:1px solid #e2e8f0;text-align:center;">
       <p style="margin:0 0 6px;font-size:13px;color:#475569;">For any queries, please contact us:</p>
       <p style="margin:0;font-size:13px;font-weight:bold;color:#1e1b4b;">📞 +91 9830053647 &nbsp;|&nbsp; ✉️ contact@bangalirberano.com</p>
-      <p style="margin:10px 0 0;font-size:11px;color:#94a3b8;">42, B G G Sarani, Radha Neel Nibas, Bhadrakali, Hooghly, WB - 712232.<br/>Land Mark : Near Bhadrakali Youth Core Club.</p>
+      <p style="margin:10px 0 0;font-size:11px;color:#94a3b8;">42, B G G Sarani, Radha Neel Nibas-II, Bhadrakali, Uttarpara, Hooghly, WB - 712232.<br/>Land Mark : Near Bhadrakali Youth Core Club.</p>
       <p style="margin:8px 0 0;font-size:11px;color:#94a3b8;">Thank you for choosing Bangalir Berano! 🌟</p>
     </div>
   </div>
@@ -226,7 +226,7 @@ exports.sendCustomerEmail = async (req, res) => {
     <div style="background:#f8fafc;padding:20px 32px;border-top:1px solid #e2e8f0;text-align:center;">
       <p style="margin:0 0 6px;font-size:13px;color:#475569;">For any queries, please contact us:</p>
       <p style="margin:0;font-size:13px;font-weight:bold;color:#1e1b4b;">📞 +91 9830053647 &nbsp;|&nbsp; ✉️ contact@bangalirberano.com</p>
-      <p style="margin:10px 0 0;font-size:11px;color:#94a3b8;">42, B G G Sarani, Radha Neel Nibas, Bhadrakali, Hooghly, WB - 712232.<br/>Land Mark : Near Bhadrakali Youth Core Club.</p>
+      <p style="margin:10px 0 0;font-size:11px;color:#94a3b8;">42, B G G Sarani, Radha Neel Nibas-II, Bhadrakali, Uttarpara, Hooghly, WB - 712232.<br/>Land Mark : Near Bhadrakali Youth Core Club.</p>
       <p style="margin:8px 0 0;font-size:11px;color:#94a3b8;">Thank you for choosing Bangalir Berano! 🌟</p>
     </div>
   </div>

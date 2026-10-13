@@ -519,6 +519,32 @@ body {
   }
 }
 
+/* ---- Reviews Marquee with Hover Pause ---- */
+@keyframes reviewsScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.reviews-marquee-track {
+  display: flex;
+  gap: 1.25rem;
+  padding-left: 0.625rem;
+  padding-right: 0.625rem;
+  width: max-content;
+  will-change: transform;
+  animation: reviewsScroll 85s linear infinite;
+}
+
+.reviews-marquee-container:hover .reviews-marquee-track,
+.reviews-marquee-track:hover,
+.reviews-marquee-track.is-paused {
+  animation-play-state: paused !important;
+}
+
 @keyframes marquee {
   0% {
     transform: translateX(0);
@@ -562,4 +588,42 @@ body {
   animation: urgentSeatsGlow 1.6s ease-in-out infinite;
   display: inline-flex;
   align-items: center;
+}
+
+/* ---- Interactive Cursor & Click Feedback ---- */
+html, body {
+  cursor: auto;
+}
+
+a, button, [role="button"], input[type="submit"], input[type="button"], select, .cursor-pointer {
+  cursor: pointer;
+}
+
+:active {
+  cursor: pointer;
+}
+
+.cursor-click-ripple {
+  position: fixed;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99999;
+  transform: translate(-50%, -50%) scale(1);
+  background: radial-gradient(circle, rgba(201, 169, 110, 0.45) 0%, rgba(201, 169, 110, 0.1) 70%, transparent 100%);
+  border: 1.5px solid rgba(201, 169, 110, 0.75);
+  box-shadow: 0 0 12px rgba(201, 169, 110, 0.5);
+  animation: cursorRippleAnim 0.55s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+
+@keyframes cursorRippleAnim {
+  0% {
+    transform: translate(-50%, -50%) scale(0.6);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3.2);
+    opacity: 0;
+  }
 }

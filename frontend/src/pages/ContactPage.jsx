@@ -112,7 +112,7 @@ export default function ContactPage() {
             <div>
               <h4 className="text-sm font-bold text-white mb-0.5">Registered Office Address</h4>
               <p className="text-xs text-[#a09a8e] leading-relaxed">
-                42, B G G Sarani, Radha Neel Nibas, Bhadrakali, Hooghly, WB - 712232 (Near Bhadrakali Youth Core Club).
+                42, B G G Sarani, Radha Neel Nibas-II, Bhadrakali, Uttarpara, Hooghly, WB - 712232 (Land Mark : Near Bhadrakali Youth Core Club).
               </p>
             </div>
           </div>

@@ -104,7 +104,10 @@ export default function Navbar() {
               className="w-11 h-11 rounded-full shadow-lg group-hover:shadow-[0_0_20px_rgba(201,169,110,0.4)] transition-shadow duration-300 object-cover"
             />
             <div className="flex flex-col">
-              <p className="text-[13px] sm:text-[15px] font-bold tracking-[0.15em] sm:tracking-[0.2em] text-[#c9a96e] uppercase leading-none mb-1">Bangalir Berano</p>
+              <p className="text-[13px] sm:text-[15px] font-bold tracking-[0.15em] sm:tracking-[0.2em] text-[#c9a96e] uppercase leading-none mb-1 flex items-baseline">
+                <span>Bangalir Berano</span>
+                <sup className="text-[8px] sm:text-[9.5px] font-bold tracking-normal text-[#c9a96e] ml-0.5 -top-1.5 relative select-none">TM</sup>
+              </p>
               <p className="hidden sm:block text-[10px] sm:text-[11px] text-[#8a837c] tracking-[0.25em] uppercase leading-none">Tours &amp; Travels</p>
             </div>
           </a>
@@ -206,7 +209,9 @@ export default function Navbar() {
                   alt="Bangalir Berano Logo"
                   className="w-10 h-10 rounded-full object-cover shadow-lg"
                 />
-                <span className="text-[11px] font-semibold tracking-[0.2em] text-[#c9a96e] uppercase">Bangalir Berano</span>
+                <span className="text-[11px] font-semibold tracking-[0.2em] text-[#c9a96e] uppercase flex items-center">
+                  Bangalir Berano<sup className="text-[7.5px] font-bold ml-0.5 -top-1 relative">TM</sup>
+                </span>
               </div>
               <button
                 className="w-10 h-10 flex items-center justify-center rounded-xl glass text-white"

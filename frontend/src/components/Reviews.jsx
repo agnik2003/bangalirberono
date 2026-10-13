@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { Star, Quote, ArrowRight } from 'lucide-react';
 import { BRAND } from '../data/constants';
@@ -48,6 +48,7 @@ const ReviewCard = ({ review }) => (
 export default function Reviews() {
   const headRef = useRef(null);
   const inView = useInView(headRef, { once: true, margin: '-60px' });
+  const [isPaused, setIsPaused] = useState(false);
   
   // Show only top 15 reviews in the carousel to keep it light
   const displayReviews = ALL_REVIEWS.slice(0, 15);
@@ -109,27 +110,27 @@ export default function Reviews() {
           </div>
         </div>
 
-        {/* Continuous auto-scrolling marquee using Framer Motion */}
-        <div className="relative flex overflow-hidden group">
-          <motion.div 
-            className="flex gap-5 px-2.5 shrink-0"
-            style={{ width: "max-content" }}
-            animate={{ x: ["0%", "-50%"] }}
-            transition={{
-              ease: "linear",
-              duration: 90,
-              repeat: Infinity,
-            }}
+        {/* Continuous auto-scrolling marquee with pause on hover */}
+        <div 
+          className="relative flex overflow-hidden reviews-marquee-container py-3 cursor-default group"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+          onTouchStart={() => setIsPaused(true)}
+          onTouchEnd={() => setIsPaused(false)}
+          aria-label="Traveller reviews carousel - hover to pause and read"
+        >
+          <div 
+            className={`reviews-marquee-track shrink-0 ${isPaused ? 'is-paused' : ''}`}
           >
             {/* Render reviews twice for seamless looping */}
             {[...displayReviews, ...displayReviews].map((review, index) => (
               <ReviewCard key={`r-${review.id}-${index}`} review={review} />
             ))}
-          </motion.div>
+          </div>
           
           {/* Fade edges */}
-          <div className="pointer-events-none absolute left-0 top-0 h-full w-12 bg-gradient-to-r from-[#111114] to-transparent z-10" />
-          <div className="pointer-events-none absolute right-0 top-0 h-full w-12 bg-gradient-to-l from-[#111114] to-transparent z-10" />
+          <div className="pointer-events-none absolute left-0 top-0 h-full w-12 sm:w-20 bg-gradient-to-r from-[#111114] to-transparent z-10" />
+          <div className="pointer-events-none absolute right-0 top-0 h-full w-12 sm:w-20 bg-gradient-to-l from-[#111114] to-transparent z-10" />
         </div>
 
       </div>
