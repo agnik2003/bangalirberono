@@ -54,20 +54,23 @@ export default function FloatingContact() {
           MOBILE FIXED BOTTOM BAR (Premium touch-friendly)
           ================================================== */}
       <motion.div
-        className="fixed bottom-0 left-0 right-0 z-[999] md:hidden glass-dark border-t border-white/10"
+        className="fixed bottom-0 left-0 right-0 z-[999] md:hidden bg-[#0c0c10] border-t border-[#c9a96e]/30 shadow-[0_-12px_40px_rgba(0,0,0,0.95)]"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
         transition={{ delay: 2, type: 'spring', damping: 25, stiffness: 200 }}
       >
+        {/* Top luxury gold hairline accent */}
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#c9a96e]/60 to-transparent pointer-events-none" />
+
         <div className="flex items-center p-2.5 sm:p-4 gap-2 sm:gap-3 max-w-full min-w-0">
           {/* Call Us Button */}
           <a
             href={BRAND.phoneTel}
-            className="flex-1 min-w-0 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-1 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 active:scale-[0.98] transition-all"
+            className="flex-1 min-w-0 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-2 rounded-xl bg-[#16161e] border border-white/15 hover:border-[#c9a96e]/50 shadow-md active:scale-[0.98] transition-all"
             aria-label="Call Us"
           >
-            <Phone size={14} className="text-white shrink-0" />
+            <Phone size={14} className="text-[#c9a96e] shrink-0" />
             <span className="text-[12px] sm:text-sm font-semibold text-white truncate">Call</span>
           </a>
 
@@ -76,7 +79,7 @@ export default function FloatingContact() {
             href={BRAND.whatsapp}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 min-w-0 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-1 rounded-xl bg-[#25D366]/20 border border-[#25D366]/30 hover:bg-[#25D366]/30 active:scale-[0.98] transition-all"
+            className="flex-1 min-w-0 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-2 rounded-xl bg-[#092215] border border-[#25D366]/40 hover:border-[#25D366] shadow-[0_2px_12px_rgba(37,211,102,0.18)] active:scale-[0.98] transition-all"
             aria-label="WhatsApp"
           >
             <svg viewBox="0 0 24 24" className="w-4 h-4 text-[#25D366] fill-current shrink-0">
@@ -89,7 +92,7 @@ export default function FloatingContact() {
           <a
             href="#contact"
             onClick={scrollToContact}
-            className="flex-1 min-w-0 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-1 rounded-xl bg-gradient-to-r from-[#d49a3f] via-[#ba7c2b] to-[#c46820] active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(212,154,63,0.4)] text-white"
+            className="flex-1 min-w-0 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-2 rounded-xl bg-gradient-to-r from-[#d49a3f] via-[#ba7c2b] to-[#c46820] active:scale-[0.98] transition-all shadow-[0_4px_18px_rgba(212,154,63,0.45)] text-white"
             aria-label="Plan Your Trip"
           >
             <Calendar size={14} className="text-white shrink-0" />
