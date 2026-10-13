@@ -10,10 +10,11 @@ exports.login = (req, res) => {
   if (id === ADMIN_CREDENTIALS.id && password === ADMIN_CREDENTIALS.password) {
     const token = jwt.sign({ role: 'admin' }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '1d' });
     
+    const isProduction = process.env.NODE_ENV === 'production' || Boolean(process.env.RENDER);
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: 24 * 60 * 60 * 1000 // 1 day
     });
 
@@ -36,6 +37,12 @@ exports.checkAuth = (req, res) => {
 };
 
 exports.logout = (req, res) => {
-  res.cookie('token', '', { maxAge: 0, httpOnly: true });
+  const isProduction = process.env.NODE_ENV === 'production' || Boolean(process.env.RENDER);
+  res.cookie('token', '', {
+    maxAge: 0,
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax'
+  });
   res.status(200).json({ success: true, message: 'Logged out' });
 };

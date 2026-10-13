@@ -1,5 +1,11 @@
-export const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-﻿// ============================================================
+const getApiBase = () => {
+  const envUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
+  if (!envUrl) return 'http://localhost:5000/api';
+  return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
+};
+
+export const API = getApiBase();
+// ============================================================
 // BANGALIR BERANO — Site Data / Constants
 // All editable content is centralized here.
 // ============================================================
