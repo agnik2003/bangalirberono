@@ -1,13 +1,14 @@
 const jwt = require('jsonwebtoken');
 
 exports.login = (req, res) => {
-  const { id, password } = req.body;
+  const rawId = req.body?.id != null ? String(req.body.id).trim() : '';
+  const rawPassword = req.body?.password != null ? String(req.body.password).trim() : '';
   const ADMIN_CREDENTIALS = {
-    id: process.env.ADMIN_ID,
-    password: process.env.ADMIN_PASSWORD
+    id: (process.env.ADMIN_ID || 'admin').trim(),
+    password: (process.env.ADMIN_PASSWORD || '1234').trim()
   };
   
-  if (id === ADMIN_CREDENTIALS.id && password === ADMIN_CREDENTIALS.password) {
+  if (rawId === ADMIN_CREDENTIALS.id && rawPassword === ADMIN_CREDENTIALS.password) {
     const token = jwt.sign({ role: 'admin' }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '1d' });
     
     const isProduction = process.env.NODE_ENV === 'production' || Boolean(process.env.RENDER);
@@ -18,14 +19,14 @@ exports.login = (req, res) => {
       maxAge: 24 * 60 * 60 * 1000 // 1 day
     });
 
-    res.status(200).json({ success: true, message: 'Login successful' });
+    res.status(200).json({ success: true, message: 'Login successful', token });
   } else {
     res.status(401).json({ success: false, message: 'Invalid credentials' });
   }
 };
 
 exports.checkAuth = (req, res) => {
-  const token = req.cookies?.token;
+  const token = req.cookies?.token || req.headers.authorization?.replace(/^Bearer\s+/i, '');
   if (!token) return res.status(401).json({ success: false, message: 'Not authenticated' });
 
   try {

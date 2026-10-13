@@ -5,7 +5,7 @@ import {
   Calendar, Edit3, Trash2, CheckCircle, XCircle, Plus, X,
   Upload, Loader2, AlertCircle, ChevronDown, ChevronUp, List, FileText, FilePlus, Printer, Search, Bell, MapPin
 } from 'lucide-react';
-import { BRAND, EXPERIENCES, API } from '../data/constants';
+import { BRAND, EXPERIENCES, API, authFetch } from '../data/constants';
 import BillModal from '../components/BillModal';
 import BookingModal from '../components/BookingModal';
 
@@ -185,7 +185,7 @@ function PackageFormModal({ pkg, categories = [], onClose, onSaved }) {
 
       const url = isEdit ? `${API}/packages/${pkg._id}` : `${API}/packages`;
       const method = isEdit ? 'PUT' : 'POST';
-      const res = await fetch(url, { method, body: fd, credentials: 'include' });
+      const res = await authFetch(url, { method, body: fd });
       const data = await res.json();
 
       if (data.success) { onSaved(); onClose(); }
@@ -626,10 +626,9 @@ Thank you for choosing Bangalir Berano!`;
     try {
       const bill = shareModal.bill;
       const billUrl = `${window.location.origin}/admin/bill/${bill._id}`;
-      const res = await fetch(`${API}/email/send-bill`, {
+      const res = await authFetch(`${API}/email/send-bill`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ toEmail: shareEmail, bill, billUrl, clientUrl: window.location.origin }),
       });
       const data = await res.json();
@@ -674,10 +673,9 @@ Thank you for choosing Bangalir Berano!`;
       if (!shareEmail.trim()) { setShareMsg('Please enter an email address.'); return; }
       setShareSending(true); setShareMsg('');
       try {
-        const res = await fetch(`${API}/email/send-customer-message`, {
+        const res = await authFetch(`${API}/email/send-customer-message`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
           body: JSON.stringify({ toEmail: shareEmail, subject: contactMessageType === 'invite' ? 'Upcoming Trip Invitation' : 'Message from Bangalir Berano', messageBody: messageText }),
         });
         const data = await res.json();
@@ -778,7 +776,7 @@ Thank you for choosing Bangalir Berano!`;
 
   const fetchEnquiries = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/enquiries`, { credentials: 'include' });
+      const res = await authFetch(`${API}/enquiries`);
       const data = await res.json();
       if (data.success) setEnquiries(data.data);
     } catch { } finally { setLoadingEnquiries(false); }
@@ -786,7 +784,7 @@ Thank you for choosing Bangalir Berano!`;
 
   const fetchCustomers = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/customers`, { credentials: 'include' });
+      const res = await authFetch(`${API}/customers`);
       const data = await res.json();
       if (data.success) setCustomers(data.data);
     } catch { } finally { setLoadingCustomers(false); }
@@ -794,7 +792,7 @@ Thank you for choosing Bangalir Berano!`;
 
   const fetchBookings = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/bookings`, { credentials: 'include' });
+      const res = await authFetch(`${API}/bookings`);
       const data = await res.json();
       if (data.success) setBookings(data.data);
     } catch { } finally { setLoadingBookings(false); }
@@ -802,7 +800,7 @@ Thank you for choosing Bangalir Berano!`;
 
   const fetchBills = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/bills`, { credentials: 'include' });
+      const res = await authFetch(`${API}/bills`);
       const data = await res.json();
       if (data.success) setBills(data.data);
     } catch { } finally { setLoadingBills(false); }
@@ -811,8 +809,7 @@ Thank you for choosing Bangalir Berano!`;
   const fetchPackages = useCallback(async () => {
     setLoadingPackages(true);
     try {
-      const res = await fetch(`${API}/packages`, {
-        credentials: 'include',
+      const res = await authFetch(`${API}/packages`, {
         headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' }
       });
       const data = await res.json();
@@ -823,7 +820,7 @@ Thank you for choosing Bangalir Berano!`;
   const fetchCategories = useCallback(async () => {
     setLoadingCategories(true);
     try {
-      const res = await fetch(`${API}/categories`, { credentials: 'include' });
+      const res = await authFetch(`${API}/categories`);
       const data = await res.json();
       if (data.success) setCategories(data.data);
     } catch { } finally { setLoadingCategories(false); }
@@ -833,39 +830,46 @@ Thank you for choosing Bangalir Berano!`;
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch(`${API}/admin/check`, { credentials: 'include' });
-        if (!res.ok) { navigate('/admin'); return; }
+        const res = await authFetch(`${API}/admin/check`);
+        if (!res.ok) {
+          localStorage.removeItem('admin_token');
+          navigate('/admin');
+          return;
+        }
         fetchEnquiries(); fetchBookings(); fetchPackages(); fetchCategories(); fetchBills(); fetchCustomers();
-      } catch { navigate('/admin'); }
+      } catch {
+        localStorage.removeItem('admin_token');
+        navigate('/admin');
+      }
     };
     checkAuth();
   }, [navigate, fetchEnquiries, fetchBookings, fetchPackages, fetchCategories, fetchBills, fetchCustomers]);
 
   const handleApproveEnquiry = async (id) => {
     if (!window.confirm('Approve this enquiry and move to Bookings?')) return;
-    const res = await fetch(`${API}/enquiries/${id}/approve`, { method: 'POST', credentials: 'include' });
+    const res = await authFetch(`${API}/enquiries/${id}/approve`, { method: 'POST' });
     if (res.ok) { fetchEnquiries(); fetchBookings(); }
   };
   const handleDeleteEnquiry = async (id) => {
     if (!window.confirm('Delete this enquiry?')) return;
-    const res = await fetch(`${API}/enquiries/${id}`, { method: 'DELETE', credentials: 'include' });
+    const res = await authFetch(`${API}/enquiries/${id}`, { method: 'DELETE' });
     if (res.ok) fetchEnquiries();
   };
   const handleDeleteBooking = async (id) => {
     if (!window.confirm('Revert this booking?')) return;
-    const res = await fetch(`${API}/bookings/${id}`, { method: 'DELETE', credentials: 'include' });
+    const res = await authFetch(`${API}/bookings/${id}`, { method: 'DELETE' });
     if (res.ok) { fetchBookings(); fetchEnquiries(); }
   };
   const handleDeleteBill = async (id) => {
     if (!window.confirm('Delete this bill?')) return;
-    const res = await fetch(`${API}/bills/${id}`, { method: 'DELETE', credentials: 'include' });
+    const res = await authFetch(`${API}/bills/${id}`, { method: 'DELETE' });
     if (res.ok) { fetchBills(); }
   };
   const handleDeletePackage = async (id) => {
     if (!window.confirm('Delete this package? This cannot be undone.')) return;
     setDeletingId(id);
     try {
-      const res = await fetch(`${API}/packages/${id}`, { method: 'DELETE', credentials: 'include' });
+      const res = await authFetch(`${API}/packages/${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) setPackages(prev => prev.filter(p => p._id !== id));
       else alert(data.error || 'Failed to delete');
@@ -876,7 +880,7 @@ Thank you for choosing Bangalir Berano!`;
     try {
       const fd = new FormData();
       fd.append('seatsLeft', seats);
-      const res = await fetch(`${API}/packages/${id}`, { method: 'PUT', body: fd, credentials: 'include' });
+      const res = await authFetch(`${API}/packages/${id}`, { method: 'PUT', body: fd });
       const data = await res.json();
       if (data.success) setPackages(prev => prev.map(p => p._id === id ? { ...p, seatsLeft: seats } : p));
     } catch { /* silent */ }
@@ -907,9 +911,8 @@ Thank you for choosing Bangalir Berano!`;
     // Persist to backend — send the full ordered list of IDs
     try {
       console.log('Sending reorder request to backend...', withSortOrder.map(p => p._id));
-      const res = await fetch(`${API}/packages/reorder/bulk`, {
+      const res = await authFetch(`${API}/packages/reorder/bulk`, {
         method: 'PUT',
-        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderedIds: withSortOrder.map(p => p._id) })
       });
@@ -933,11 +936,10 @@ Thank you for choosing Bangalir Berano!`;
     if (!newCategoryName.trim()) return;
     setSavingCategory(true);
     try {
-      const res = await fetch(`${API}/categories`, {
+      const res = await authFetch(`${API}/categories`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newCategoryName.trim() }),
-        credentials: 'include'
+        body: JSON.stringify({ name: newCategoryName.trim() })
       });
       const data = await res.json();
       if (data.success) {
@@ -952,7 +954,7 @@ Thank you for choosing Bangalir Berano!`;
   const handleDeleteCategory = async (id) => {
     if (!window.confirm('Delete this category? Note: existing packages in this category will become tagless.')) return;
     try {
-      const res = await fetch(`${API}/categories/${id}`, { method: 'DELETE', credentials: 'include' });
+      const res = await authFetch(`${API}/categories/${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) fetchCategories();
       else alert(data.error || 'Failed to delete');
@@ -960,7 +962,10 @@ Thank you for choosing Bangalir Berano!`;
   };
 
   const handleLogout = async () => {
-    await fetch(`${API}/admin/logout`, { method: 'POST', credentials: 'include' });
+    try {
+      await authFetch(`${API}/admin/logout`, { method: 'POST' });
+    } catch { }
+    localStorage.removeItem('admin_token');
     navigate('/admin');
   };
 
@@ -1499,7 +1504,7 @@ Thank you for choosing Bangalir Berano!`;
                                       <button onClick={() => { setCustomerContactModal({ type: 'email', customer: c }); setShareEmail(c.email || ''); setShareMsg(''); setContactMessageType('invite'); setSelectedPackageId(packages[0]?._id || ''); }} className="px-3 py-1.5 bg-sky-50 text-sky-700 hover:bg-sky-100 rounded-lg font-bold text-xs transition-colors border border-sky-200 flex items-center gap-1"><span>✉️</span> Email</button>
                                       <button onClick={async () => {
                                         if (!window.confirm('Delete this customer?')) return;
-                                        const res = await fetch(`${API}/customers/${c._id}`, { method: 'DELETE', credentials: 'include' });
+                                        const res = await authFetch(`${API}/customers/${c._id}`, { method: 'DELETE' });
                                         if (res.ok) fetchCustomers();
                                       }} className="px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg font-bold text-xs transition-colors border border-red-200 flex items-center gap-1"><Trash2 size={13} /> Delete</button>
                                     </div>
@@ -1876,11 +1881,10 @@ Thank you for choosing Bangalir Berano!`;
             <form onSubmit={async (e) => {
               e.preventDefault();
               try {
-                const res = await fetch(`${API}/customers`, {
+                const res = await authFetch(`${API}/customers`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(newCustomer),
-                  credentials: 'include'
+                  body: JSON.stringify(newCustomer)
                 });
                 if (res.ok) {
                   setShowCustomerModal(false);

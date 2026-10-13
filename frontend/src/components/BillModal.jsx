@@ -1,4 +1,4 @@
-import { API } from '../data/constants';
+import { API, authFetch } from '../data/constants';
 import { useState, useEffect } from 'react';
 import { X, Loader2, Printer, Plus, Edit2, Trash2, Save, Download } from 'lucide-react';
 
@@ -59,7 +59,7 @@ export default function BillModal({ booking, existingBillId, packages = [], onCl
     if (!idToFetch) return;
     setLoading(true);
     try {
-      const res = await fetch(`${API}/bills/${idToFetch}`);
+      const res = await authFetch(`${API}/bills/${idToFetch}`);
       const data = await res.json();
       if (data.success) {
         setBill(data.data);
@@ -162,7 +162,7 @@ export default function BillModal({ booking, existingBillId, packages = [], onCl
 
       const payload = { ...form, items };
 
-      const res = await fetch(url, {
+      const res = await authFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -191,7 +191,7 @@ export default function BillModal({ booking, existingBillId, packages = [], onCl
 
       const payload = { ...paymentForm, billId: bill._id };
 
-      const res = await fetch(url, {
+      const res = await authFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -217,7 +217,7 @@ export default function BillModal({ booking, existingBillId, packages = [], onCl
     if (!window.confirm('Are you sure you want to delete this payment?')) return;
     setLoading(true);
     try {
-      const res = await fetch(`${API}/payments/${id}`, { method: 'DELETE' });
+      const res = await authFetch(`${API}/payments/${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
         fetchBill();

@@ -1,4 +1,4 @@
-import { API, BRAND } from '../data/constants';
+import { API, BRAND, authFetch } from '../data/constants';
 import { useEffect, useState } from 'react';
 import { Search, Plus, Trash2, X, FileText, Loader2 } from 'lucide-react';
 
@@ -26,7 +26,7 @@ export default function AdminAllCustomers() {
   
   const fetchCustomers = async () => {
     try {
-      const res = await fetch(`${API}/customers`, { credentials: 'include' });
+      const res = await authFetch(`${API}/customers`);
       const data = await res.json();
       if (data.success) setCustomers(data.data);
     } catch (err) {}
@@ -37,18 +37,25 @@ export default function AdminAllCustomers() {
     document.title = `All Customers | ${BRAND.name} Admin`;
     const checkAuth = async () => {
       try {
-        const res = await fetch(`${API}/admin/check`, { credentials: 'include' });
-        if (!res.ok) { window.location.href = '/admin'; return; }
+        const res = await authFetch(`${API}/admin/check`);
+        if (!res.ok) { 
+          localStorage.removeItem('admin_token');
+          window.location.href = '/admin'; 
+          return; 
+        }
         
         // Fetch packages for the dropdown
         try {
-          const pkgRes = await fetch(`${API}/packages`, { credentials: 'include' });
+          const pkgRes = await authFetch(`${API}/packages`);
           const pkgData = await pkgRes.json();
           if (pkgData.success) setPackages(pkgData.data);
         } catch(e) {}
         
         fetchCustomers();
-      } catch { window.location.href = '/admin'; }
+      } catch { 
+        localStorage.removeItem('admin_token');
+        window.location.href = '/admin'; 
+      }
     };
     checkAuth();
   }, []);
@@ -56,7 +63,7 @@ export default function AdminAllCustomers() {
   const handleDeleteCustomer = async (id) => {
     if (!window.confirm('Are you sure you want to delete this customer?')) return;
     try {
-      await fetch(`${API}/customers/${id}`, { method: 'DELETE', credentials: 'include' });
+      await authFetch(`${API}/customers/${id}`, { method: 'DELETE' });
       fetchCustomers();
     } catch(err) {}
   };
@@ -283,11 +290,10 @@ export default function AdminAllCustomers() {
             <form onSubmit={async (e) => {
               e.preventDefault();
               try {
-                const res = await fetch(`${API}/customers`, {
+                const res = await authFetch(`${API}/customers`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(newCustomer),
-                  credentials: 'include'
+                  body: JSON.stringify(newCustomer)
                 });
                 if (res.ok) {
                   setShowCustomerModal(false);

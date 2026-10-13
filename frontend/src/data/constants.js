@@ -5,6 +5,19 @@ const getApiBase = () => {
 };
 
 export const API = getApiBase();
+
+export const authFetch = (url, options = {}) => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
+  const headers = { ...(options.headers || {}) };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, {
+    ...options,
+    headers,
+    credentials: 'include'
+  });
+};
 // ============================================================
 // BANGALIR BERANO — Site Data / Constants
 // All editable content is centralized here.

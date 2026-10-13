@@ -1,9 +1,6 @@
-import { API } from '../data/constants';
-import { useEffect, useState, useCallback } from 'react';
+import { API, BRAND, authFetch } from '../data/constants';
+import { useEffect, useState } from 'react';
 import { Calendar, FileText, Search, Loader2 } from 'lucide-react';
-
-
-
 
 export default function AdminUnpaidBills() {
   const [bills, setBills] = useState([]);
@@ -20,7 +17,7 @@ export default function AdminUnpaidBills() {
 
     const fetchBills = async () => {
       try {
-        const res = await fetch(`${API}/bills`, { credentials: 'include' });
+        const res = await authFetch(`${API}/bills`);
         const data = await res.json();
         if (data.success) {
           // Filter out only unpaid/partially paid bills
@@ -38,7 +35,7 @@ export default function AdminUnpaidBills() {
     };
     const fetchPackages = async () => {
       try {
-        const res = await fetch(`${API}/packages`, { credentials: 'include' });
+        const res = await authFetch(`${API}/packages`);
         const data = await res.json();
         if (data.success) setPackages(data.data);
       } catch (err) { }
@@ -47,11 +44,18 @@ export default function AdminUnpaidBills() {
     // Quick auth check
     const checkAuth = async () => {
       try {
-        const res = await fetch(`${API}/admin/check`, { credentials: 'include' });
-        if (!res.ok) { window.location.href = '/admin'; return; }
+        const res = await authFetch(`${API}/admin/check`);
+        if (!res.ok) { 
+          localStorage.removeItem('admin_token');
+          window.location.href = '/admin'; 
+          return; 
+        }
         fetchBills();
         fetchPackages();
-      } catch { window.location.href = '/admin'; }
+      } catch { 
+        localStorage.removeItem('admin_token');
+        window.location.href = '/admin'; 
+      }
     };
 
     checkAuth();

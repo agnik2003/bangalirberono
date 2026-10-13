@@ -159,7 +159,7 @@ function AllUpcomingTripsModal({ trips, onClose, onOpenDetails, onOpenBook }) {
               </div>
 
               {/* Action Buttons for Each Trip */}
-              <div className="flex items-center gap-2 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-white/5">
+              <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full lg:w-auto shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-white/5">
                 {/* 1. Details */}
                 <button
                   type="button"
@@ -167,7 +167,7 @@ function AllUpcomingTripsModal({ trips, onClose, onOpenDetails, onOpenBook }) {
                     onClose();
                     onOpenDetails(trip);
                   }}
-                  className="flex-1 sm:flex-initial px-3 sm:px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white text-[12px] sm:text-[12.5px] font-semibold border border-white/10 hover:border-[#c9a96e]/50 transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap shadow-sm active:scale-95"
+                  className="w-full sm:w-auto px-3 sm:px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white text-[12px] sm:text-[12.5px] font-semibold border border-white/10 hover:border-[#c9a96e]/50 transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap shadow-sm active:scale-95"
                 >
                   <Info size={14} className="text-[#c9a96e]" />
                   <span>Details</span>
@@ -180,7 +180,7 @@ function AllUpcomingTripsModal({ trips, onClose, onOpenDetails, onOpenBook }) {
                     onClose();
                     onOpenBook(trip);
                   }}
-                  className="flex-1 sm:flex-initial px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-[#c9a96e] to-[#e07b39] text-[#0a0a0b] text-[12px] sm:text-[12.5px] font-bold shadow-[0_2px_12px_rgba(201,169,110,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
+                  className="w-full sm:w-auto px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-[#c9a96e] to-[#e07b39] text-[#0a0a0b] text-[12px] sm:text-[12.5px] font-bold shadow-[0_2px_12px_rgba(201,169,110,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
                 >
                   <Calendar size={14} />
                   <span>Book Now</span>
@@ -191,7 +191,7 @@ function AllUpcomingTripsModal({ trips, onClose, onOpenDetails, onOpenBook }) {
                   href={generateWhatsAppBookingUrl(trip)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 sm:flex-initial px-3.5 sm:px-4 py-2 rounded-xl bg-[#25D366]/15 hover:bg-[#25D366] text-[#25D366] hover:text-[#0a0a0b] border border-[#25D366]/40 hover:border-[#25D366] text-[12px] sm:text-[12.5px] font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap shadow-sm active:scale-95"
+                  className="col-span-2 sm:col-auto w-full sm:w-auto px-3.5 sm:px-4 py-2 rounded-xl bg-[#25D366]/15 hover:bg-[#25D366] text-[#25D366] hover:text-[#0a0a0b] border border-[#25D366]/40 hover:border-[#25D366] text-[12px] sm:text-[12.5px] font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap shadow-sm active:scale-95"
                 >
                   <MessageCircle size={14} />
                   <span>Book via WhatsApp</span>
