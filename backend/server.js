@@ -28,6 +28,10 @@ const defaultOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:5175',
+  'https://bangalirberano.com',
+  'http://bangalirberano.com',
+  'https://www.bangalirberano.com',
+  'http://www.bangalirberano.com',
   'https://bangalir-berano.netlify.app',
   'https://bangalirberono.vercel.app'
 ];

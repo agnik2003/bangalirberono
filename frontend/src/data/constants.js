@@ -1,10 +1,13 @@
 const getApiBase = () => {
-  if (typeof window !== 'undefined' && window.location.hostname.includes('netlify.app')) {
+  const envUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
+  if (envUrl) return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
+  if (typeof window !== 'undefined') {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:5000/api';
+    }
     return `${window.location.origin}/api`;
   }
-  const envUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
-  if (!envUrl) return 'http://localhost:5000/api';
-  return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
+  return 'http://localhost:5000/api';
 };
 
 export const API = getApiBase();
