@@ -22,10 +22,12 @@ const PORT = process.env.PORT || 5000;
 // Trigger restart to load port 587
 
 // Middleware
-// CORS origins: in production set FRONTEND_URL env var to your deployed domain
-const allowedOrigins = process.env.FRONTEND_URL
-  ? [process.env.FRONTEND_URL]
-  : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'];
+// CORS origins: automatically supports Netlify, localhost, and custom domains from FRONTEND_URL
+const defaultOrigins = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'https://bangalir-berano.netlify.app'];
+const configuredOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(',').map(o => o.trim().replace(/\/+$/, ''))
+  : [];
+const allowedOrigins = Array.from(new Set([...defaultOrigins, ...configuredOrigins].filter(Boolean)));
 
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json({ limit: '20mb' })); // allow large base64 payloads
