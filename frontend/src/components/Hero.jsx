@@ -102,10 +102,10 @@ export default function Hero() {
         />
       </div>
 
-      {/* Gradient overlays — balanced for crisp mountain visibility & high text legibility on mobile; desktop preserved */}
+      {/* Gradient overlays — luminous mountain visibility & high text legibility on mobile; desktop preserved */}
       <div className="absolute inset-0 pointer-events-none z-10">
-        <div className="absolute inset-0 bg-[#0a0a0b]/25 lg:bg-[#0a0a0b]/18" />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0b]/60 via-[#0a0a0b]/20 to-[#0a0a0b]/85 lg:from-[#0a0a0b]/50 lg:via-[#0a0a0b]/10 lg:to-[#0a0a0b]/80" />
+        <div className="absolute inset-0 bg-[#0a0a0b]/10 lg:bg-[#0a0a0b]/18" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0b]/40 via-[#0a0a0b]/10 to-[#0a0a0b]/75 lg:from-[#0a0a0b]/50 lg:via-[#0a0a0b]/10 lg:to-[#0a0a0b]/80" />
         <div className="hidden lg:block absolute inset-0 bg-gradient-to-r from-[#0a0a0b]/75 via-[#0a0a0b]/45 to-transparent" />
       </div>
 
