@@ -30,6 +30,7 @@ import ScrollToTop from './components/ScrollToTop';
 import BillPrintPage from './pages/BillPrintPage';
 import AdminUnpaidBills from './pages/AdminUnpaidBills';
 import AdminAllCustomers from './pages/AdminAllCustomers';
+import GalleryPage from './pages/GalleryPage';
 
 function Home() {
   return (
@@ -113,6 +114,7 @@ export default function App() {
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/support" element={<ContactPage />} />
             <Route path="/reviews" element={<ReviewsPage />} />
+            <Route path="/gallery" element={<GalleryPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/terms-and-conditions" element={<TermsPage />} />
             <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />

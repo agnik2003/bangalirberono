@@ -447,7 +447,8 @@ function UpcomingTripsSummary({
 }
 
 export default function AllDestinationsPage() {
-  const [activeFilter, setActiveFilter] = useState('All Tours');
+  const [activeStatus, setActiveStatus] = useState('All'); // 'All', 'Upcoming', 'Ongoing', 'Past'
+  const [activeCategory, setActiveCategory] = useState('All Categories');
   const [destinations, setDestinations] = useState(() => cachedDestinations || []);
   const [loading, setLoading] = useState(() => !cachedDestinations);
   const [selectedDestDetails, setSelectedDestDetails] = useState(null);
@@ -467,9 +468,9 @@ export default function AllDestinationsPage() {
         ]);
 
         if (pkgsRes && pkgsRes.success && Array.isArray(pkgsRes.data)) {
-          const upcoming = pkgsRes.data.filter(p => !p.status || p.status === 'Upcoming');
-          cachedDestinations = upcoming;
-          setDestinations(upcoming);
+          // Store ALL tours (Upcoming, Ongoing, Past)
+          cachedDestinations = pkgsRes.data;
+          setDestinations(pkgsRes.data);
         }
 
         if (catsRes && catsRes.success && Array.isArray(catsRes.data)) {
@@ -487,23 +488,37 @@ export default function AllDestinationsPage() {
     loadData();
   }, []);
 
-  const filteredDestinations = destinations.filter(dest =>
-    activeFilter === 'All Tours' ? true : (Array.isArray(dest.category) ? dest.category.includes(activeFilter) : dest.category === activeFilter)
-  );
+  const upcomingCount = destinations.filter(p => !p.status || p.status === 'Upcoming').length;
+  const ongoingCount = destinations.filter(p => p.status === 'Ongoing').length;
+  const pastCount = destinations.filter(p => p.status === 'Past').length;
 
-  const dynamicFilters = ['All Tours', ...categories];
+  const filteredDestinations = destinations.filter(dest => {
+    const s = dest.status || 'Upcoming';
+    if (activeStatus !== 'All' && s !== activeStatus) return false;
+    if (activeCategory !== 'All Categories') {
+      const cats = Array.isArray(dest.category)
+        ? dest.category
+        : (typeof dest.category === 'string' ? [dest.category] : []);
+      const isMatch = cats.some(c => typeof c === 'string' && c.toLowerCase().includes(activeCategory.toLowerCase()));
+      if (!isMatch) return false;
+    }
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-[#0a0a0b]">
         {/* Page hero strip */}
         <div className="pt-28 pb-6 px-4 sm:px-6 text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-[#c9a96e]/5 to-transparent pointer-events-none" />
-          <p className="text-[11px] font-bold tracking-[0.3em] text-[#c9a96e] uppercase mb-3 relative z-10">
-            Explore The World
+          <div className="absolute inset-0 bg-gradient-to-b from-[#c9a96e]/10 to-transparent pointer-events-none" />
+          <p className="text-[11px] sm:text-[12px] font-bold tracking-[0.3em] text-[#c9a96e] uppercase mb-3 relative z-10">
+            Explore All Departures
           </p>
-          <h1 className="text-3xl md:text-5xl font-display font-bold text-white relative z-10">
-            All Destinations
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-white relative z-10 mb-3">
+            All Destinations &amp; Tours
           </h1>
+          <p className="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed relative z-10">
+            Browse our complete collection of holiday departures across India — upcoming trips, ongoing tours, and past journeys.
+          </p>
         </div>
 
         {/* Written Summary Auto-Sliding Component for Upcoming Trips */}
@@ -517,34 +532,75 @@ export default function AllDestinationsPage() {
         />
 
         <section className="pt-6 pb-28 md:py-12 relative overflow-hidden">
-          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 relative z-10">
-            {/* Filters */}
-            <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 mb-10 md:mb-12">
-              {dynamicFilters.map(filter => (
+          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            {/* Status Tabs: All, Upcoming, Ongoing, Past */}
+            <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 mb-5">
+              {[
+                { id: 'All', label: 'All Tours', count: destinations.length },
+                { id: 'Upcoming', label: 'Upcoming', count: upcomingCount },
+                { id: 'Ongoing', label: 'Ongoing', count: ongoingCount, live: true },
+                { id: 'Past', label: 'Completed Tours', count: pastCount },
+              ].map(tab => (
                 <button
-                  key={filter}
-                  onClick={() => setActiveFilter(filter)}
-                  className={`px-3 py-1.5 md:px-5 md:py-2.5 rounded-full text-[11px] sm:text-[12px] md:text-[14px] font-semibold transition-all border whitespace-nowrap cursor-pointer ${
-                    activeFilter === filter
-                      ? 'bg-gradient-to-r from-[#c9a96e] to-[#e07b39] text-[#0a0a0b] border-transparent shadow-md'
-                      : 'bg-[#16161a] text-white border-white/10 hover:border-[#c9a96e]/50 hover:bg-[#1a1a1f]'
+                  key={tab.id}
+                  onClick={() => setActiveStatus(tab.id)}
+                  className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl text-[12.5px] sm:text-[14px] font-bold transition-all border flex items-center gap-2 cursor-pointer shadow-sm active:scale-95 ${
+                    activeStatus === tab.id
+                      ? 'bg-gradient-to-r from-[#c9a96e] to-[#e07b39] text-[#0a0a0b] border-transparent shadow-[0_4px_20px_rgba(201,169,110,0.35)] scale-105'
+                      : 'bg-[#15151a] text-slate-300 border-white/10 hover:border-[#c9a96e]/40 hover:text-white'
                   }`}
                 >
-                  {filter}
+                  {tab.live && (
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400" />
+                    </span>
+                  )}
+                  <span>{tab.label}</span>
+                  <span className={`text-[11px] px-2 py-0.5 rounded-full font-extrabold ${
+                    activeStatus === tab.id
+                      ? 'bg-black/25 text-[#0a0a0b]'
+                      : 'bg-white/10 text-[#c9a96e]'
+                  }`}>
+                    {tab.count}
+                  </span>
                 </button>
               ))}
             </div>
+
+            {/* Category Sub-Filters (if categories exist) */}
+            {categories.length > 0 && (
+              <div className="flex flex-wrap items-center justify-center gap-2 mb-10 md:mb-12">
+                {['All Categories', ...categories].map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setActiveCategory(cat)}
+                    className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-[11px] sm:text-[12.5px] font-semibold transition-all border whitespace-nowrap cursor-pointer ${
+                      activeCategory === cat
+                        ? 'bg-[#c9a96e]/20 text-[#c9a96e] border-[#c9a96e]/50 shadow-sm'
+                        : 'bg-transparent text-slate-400 border-white/10 hover:border-white/20 hover:text-white'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* Grid */}
             {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
                 {[1, 2, 3, 4, 5, 6].map(i => (
-                  <div key={i} className="h-[460px] rounded-[28px] bg-[#16161a] animate-pulse" />
+                  <div key={i} className="h-[500px] rounded-[30px] bg-[#16161a] animate-pulse" />
                 ))}
               </div>
             ) : filteredDestinations.length === 0 ? (
-              <div className="text-center py-20 text-[#a09a8e]">No packages found for this category.</div>
+              <div className="text-center py-20 text-[#a09a8e] bg-[#141418]/50 rounded-2xl border border-white/5 p-8 max-w-xl mx-auto">
+                <p className="text-base text-white/80 font-medium mb-1">No packages found for this selection.</p>
+                <p className="text-sm text-[#a09a8e]">Try switching to another tab or selecting All Tours to view our departures.</p>
+              </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
                 {filteredDestinations.map((dest, index) => (
                   <DestinationCard
                     key={dest._id || dest.id}

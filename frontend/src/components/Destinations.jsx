@@ -74,19 +74,29 @@ export function DestinationCard({ dest, index, onOpenDetails, onOpenBook }) {
   const experiencesList = normalizeList(dest.experiences);
   const primaryTag = dest.tag || categoriesList[0] || experiencesList[0] || 'Tour';
 
+  const isOngoing = dest.status === 'Ongoing';
+  const isPast = dest.status === 'Past';
+  const isUpcoming = !dest.status || dest.status === 'Upcoming';
+
   return (
     <motion.article
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: Math.min((index || 0) * 0.04, 0.2) }}
-      className="destination-card group relative overflow-hidden rounded-[28px] bg-[#16161a] border border-white/5 will-change-transform shadow-[0_8px_30px_rgba(0,0,0,0.4)] hover:border-[#c9a96e]/30 transition-all flex flex-col justify-between"
+      className={`destination-card group relative overflow-hidden rounded-[30px] bg-[#131317] border will-change-transform transition-all flex flex-col justify-between ${
+        isOngoing
+          ? 'border-emerald-500/30 hover:border-emerald-400/60 shadow-[0_10px_35px_rgba(0,0,0,0.55),0_0_20px_rgba(16,185,129,0.08)] hover:shadow-[0_16px_50px_rgba(16,185,129,0.2)]'
+          : isPast
+          ? 'border-white/10 hover:border-white/20 shadow-[0_10px_35px_rgba(0,0,0,0.4)] opacity-90 hover:opacity-100'
+          : 'border-[#c9a96e]/20 hover:border-[#c9a96e]/50 shadow-[0_12px_40px_rgba(0,0,0,0.55)] hover:shadow-[0_18px_50px_rgba(201,169,110,0.18)]'
+      }`}
       aria-label={`${dest.name}, ${dest.route || dest.region || ''}`}
     >
       <div>
         {/* Poster / Cover Image */}
         <div
           onClick={() => onOpenDetails && onOpenDetails(dest)}
-          className="relative aspect-[16/10] sm:aspect-[16/11] md:aspect-[4/5] overflow-hidden rounded-t-[28px] cursor-pointer bg-black/40"
+          className="relative aspect-[16/11] sm:aspect-[4/3] md:aspect-[16/12] overflow-hidden rounded-t-[30px] cursor-pointer bg-black/50"
         >
           <img
             src={dest.image}
@@ -94,23 +104,38 @@ export function DestinationCard({ dest, index, onOpenDetails, onOpenBook }) {
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1.2s] group-hover:scale-105"
             loading="lazy"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#16161a] via-transparent to-transparent opacity-80" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#131317] via-transparent to-transparent opacity-80" />
 
           {/* Top Badges Bar */}
           <div className="absolute top-4 left-4 right-4 z-10 flex items-start justify-between gap-2 pointer-events-none">
-            <div className="flex flex-wrap gap-1.5 max-w-[65%] pointer-events-auto">
-              <span className="px-3 py-1 rounded-full text-[10.5px] font-bold tracking-wider uppercase text-[#c9a96e] bg-[#0a0a0b]/75 backdrop-blur-md border border-[#c9a96e]/25 shadow-md shrink-0">
-                {dest.status || primaryTag}
-              </span>
-              {dest.tag && dest.status && (
-                <span className="hidden sm:inline-block px-2.5 py-1 rounded-full text-[10px] font-semibold text-white/80 bg-black/60 backdrop-blur-md border border-white/10 truncate max-w-[120px]">
+            <div className="flex flex-wrap gap-1.5 max-w-[70%] pointer-events-auto">
+              {isOngoing ? (
+                <span className="px-3.5 py-1 rounded-full text-[11px] font-extrabold tracking-wider uppercase text-emerald-300 bg-emerald-950/90 backdrop-blur-md border border-emerald-400/50 shadow-[0_0_15px_rgba(16,185,129,0.35)] flex items-center gap-1.5 shrink-0">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+                  </span>
+                  Ongoing
+                </span>
+              ) : isPast ? (
+                <span className="px-3 py-1 rounded-full text-[10.5px] font-bold tracking-wider uppercase text-slate-300 bg-slate-900/90 backdrop-blur-md border border-slate-600/50 shadow-md shrink-0">
+                  Past Tour
+                </span>
+              ) : (
+                <span className="px-3 py-1 rounded-full text-[10.5px] font-bold tracking-wider uppercase text-[#c9a96e] bg-[#0a0a0b]/80 backdrop-blur-md border border-[#c9a96e]/30 shadow-md shrink-0">
+                  {dest.status || primaryTag}
+                </span>
+              )}
+
+              {dest.tag && (
+                <span className="hidden sm:inline-block px-2.5 py-1 rounded-full text-[10px] font-semibold text-white/90 bg-black/60 backdrop-blur-md border border-white/10 truncate max-w-[130px]">
                   {dest.tag}
                 </span>
               )}
             </div>
 
-            {/* Top Right: Seats Left Badge (Flashing / Glowing when < 15) */}
-            {dest.seatsLeft != null && dest.seatsLeft !== '' && (() => {
+            {/* Top Right: Seats Left Badge (Only for upcoming tours) */}
+            {isUpcoming && dest.seatsLeft != null && dest.seatsLeft !== '' && (() => {
               const s = Number(dest.seatsLeft);
               const isUrgent = !isNaN(s) && s < 15 && s > 0;
               const isSoldOut = !isNaN(s) && s === 0;
@@ -155,16 +180,16 @@ export function DestinationCard({ dest, index, onOpenDetails, onOpenBook }) {
         </div>
 
         {/* Card Body with all fields */}
-        <div className="p-4 sm:p-5 pb-2">
+        <div className="p-5 sm:p-6 pb-2">
           {/* Categories & Experiences pills */}
           <div className="flex flex-wrap gap-1.5 mb-2.5">
             {categoriesList.slice(0, 2).map((cat, i) => (
-              <span key={i} className="text-[10px] font-bold uppercase tracking-wider text-[#c9a96e] bg-[#c9a96e]/10 px-2 py-0.5 rounded-md border border-[#c9a96e]/20">
+              <span key={i} className="text-[10.5px] font-bold uppercase tracking-wider text-[#c9a96e] bg-[#c9a96e]/10 px-2.5 py-0.5 rounded-md border border-[#c9a96e]/20">
                 {cat}
               </span>
             ))}
             {dest.tag && categoriesList.length === 0 && (
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#c9a96e] bg-[#c9a96e]/10 px-2 py-0.5 rounded-md border border-[#c9a96e]/20 truncate max-w-[200px]">
+              <span className="text-[10.5px] font-bold uppercase tracking-wider text-[#c9a96e] bg-[#c9a96e]/10 px-2.5 py-0.5 rounded-md border border-[#c9a96e]/20 truncate max-w-[200px]">
                 {dest.tag}
               </span>
             )}
@@ -173,30 +198,30 @@ export function DestinationCard({ dest, index, onOpenDetails, onOpenBook }) {
           {/* Tour Title */}
           <h3
             onClick={() => onOpenDetails && onOpenDetails(dest)}
-            className="text-lg md:text-xl font-display font-bold text-white hover:text-[#c9a96e] transition-colors cursor-pointer mb-2 leading-snug line-clamp-2"
+            className="text-xl md:text-[22px] font-display font-bold text-white hover:text-[#c9a96e] transition-colors cursor-pointer mb-2.5 leading-snug line-clamp-2"
           >
             {dest.name}
           </h3>
 
           {/* Route / Places Covered */}
           {(dest.route || dest.region) && (
-            <p className="text-[12.5px] text-[#a09a8e] flex items-start gap-1.5 mb-3 line-clamp-1">
-              <MapPin size={13} className="text-[#c9a96e] shrink-0 mt-0.5" />
+            <p className="text-[13px] text-[#a09a8e] flex items-start gap-1.5 mb-3.5 line-clamp-1">
+              <MapPin size={14} className="text-[#c9a96e] shrink-0 mt-0.5" />
               <span className="truncate">{dest.route || dest.region}</span>
             </p>
           )}
 
           {/* Date & Duration Row */}
-          <div className="flex items-center gap-3 text-[12px] text-slate-300 py-2 border-y border-white/5 mb-3">
+          <div className="flex items-center gap-3 text-[12.5px] text-slate-300 py-2.5 border-y border-white/5 mb-3.5">
             {dest.date && (
               <div className="flex items-center gap-1.5 truncate">
-                <Calendar size={13} className="text-[#c9a96e] shrink-0" />
+                <Calendar size={13.5} className="text-[#c9a96e] shrink-0" />
                 <span className="truncate">{dest.date}</span>
               </div>
             )}
             {dest.duration && (
               <div className="flex items-center gap-1.5 truncate ml-auto">
-                <Clock size={13} className="text-[#c9a96e] shrink-0" />
+                <Clock size={13.5} className="text-[#c9a96e] shrink-0" />
                 <span className="truncate">{dest.duration}</span>
               </div>
             )}
@@ -205,13 +230,13 @@ export function DestinationCard({ dest, index, onOpenDetails, onOpenBook }) {
           {/* Price & Basis Row */}
           <div className="flex items-baseline justify-between mb-4">
             <div>
-              <span className="text-[10px] text-[#8e887f] font-bold uppercase tracking-wider block">Package Cost</span>
-              <span className="text-base md:text-lg font-bold text-white tracking-tight">
+              <span className="text-[10.5px] text-[#8e887f] font-bold uppercase tracking-wider block">Package Cost</span>
+              <span className="text-xl md:text-2xl font-extrabold text-[#c9a96e] tracking-tight">
                 {dest.price}
               </span>
             </div>
             {dest.priceNote && (
-              <span className="text-[11px] text-[#c9a96e] text-right max-w-[55%] truncate font-medium">
+              <span className="text-[11.5px] text-slate-300 text-right max-w-[55%] truncate font-medium">
                 {dest.priceNote}
               </span>
             )}
@@ -219,39 +244,61 @@ export function DestinationCard({ dest, index, onOpenDetails, onOpenBook }) {
         </div>
       </div>
 
-      {/* Action Buttons: 3 Options (Details, Book Now, Book via WhatsApp) */}
-      <div className="p-4 sm:p-5 pt-0 flex flex-col gap-2 sm:gap-2.5">
-        <div className="flex gap-2 sm:gap-2.5">
-          {onOpenDetails && (
-            <button
-              type="button"
-              onClick={() => onOpenDetails(dest)}
-              className="flex-1 bg-[#1a1a1f] border border-white/10 hover:border-[#c9a96e]/50 text-white font-semibold py-2.5 sm:py-3 rounded-xl text-[13px] sm:text-[13.5px] transition-all hover:bg-white/5 flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
-            >
-              <Info size={14} className="text-[#c9a96e]" /> Details
-            </button>
-          )}
+      {/* Action Buttons: For Ongoing/Past show ONLY Details (no Booking buttons) */}
+      <div className="p-5 sm:p-6 pt-0 flex flex-col gap-2.5">
+        {isOngoing || isPast ? (
+          <div className="flex flex-col gap-2 pt-1">
+            {onOpenDetails && (
+              <button
+                type="button"
+                onClick={() => onOpenDetails(dest)}
+                className="w-full bg-[#1b1b22] hover:bg-[#22222b] border border-[#c9a96e]/30 hover:border-[#c9a96e]/60 text-white font-bold py-3.5 px-4 rounded-xl text-[14px] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md hover:shadow-[0_4px_20px_rgba(201,169,110,0.18)] hover:-translate-y-0.5 active:scale-98"
+              >
+                <Info size={15} className="text-[#c9a96e]" />
+                <span>View Tour Details &amp; Itinerary</span>
+              </button>
+            )}
+            <div className="text-center py-1">
+              <span className={`text-[11px] font-semibold tracking-wider uppercase ${isOngoing ? 'text-emerald-400' : 'text-slate-400'}`}>
+                {isOngoing ? '● Currently In Progress · Departures Active' : '● Tour Completed'}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="flex gap-2.5">
+              {onOpenDetails && (
+                <button
+                  type="button"
+                  onClick={() => onOpenDetails(dest)}
+                  className="flex-1 bg-[#1a1a1f] border border-white/10 hover:border-[#c9a96e]/50 text-white font-semibold py-3 rounded-xl text-[13px] sm:text-[13.5px] transition-all hover:bg-white/5 flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
+                >
+                  <Info size={14} className="text-[#c9a96e]" /> Details
+                </button>
+              )}
 
-          {onOpenBook && (
-            <button
-              type="button"
-              onClick={() => onOpenBook(dest)}
-              className="flex-1 bg-gradient-to-r from-[#c9a96e] to-[#e07b39] text-[#0a0a0b] font-bold py-2.5 sm:py-3 rounded-xl text-[13px] sm:text-[13.5px] transition-transform hover:-translate-y-0.5 flex items-center justify-center gap-1.5 shadow-[0_4px_20px_rgba(201,169,110,0.3)] hover:shadow-[0_6px_25px_rgba(201,169,110,0.45)] cursor-pointer"
-            >
-              <Calendar size={14} /> Book Now
-            </button>
-          )}
-        </div>
+              {onOpenBook && (
+                <button
+                  type="button"
+                  onClick={() => onOpenBook(dest)}
+                  className="flex-1 bg-gradient-to-r from-[#c9a96e] to-[#e07b39] text-[#0a0a0b] font-bold py-3 rounded-xl text-[13px] sm:text-[13.5px] transition-transform hover:-translate-y-0.5 flex items-center justify-center gap-1.5 shadow-[0_4px_20px_rgba(201,169,110,0.3)] hover:shadow-[0_6px_25px_rgba(201,169,110,0.45)] cursor-pointer active:scale-95"
+                >
+                  <Calendar size={14} /> Book Now
+                </button>
+              )}
+            </div>
 
-        <a
-          href={generateWhatsAppBookingUrl(dest)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full bg-[#25D366]/15 hover:bg-[#25D366] text-[#25D366] hover:text-[#0a0a0b] border border-[#25D366]/40 hover:border-[#25D366] font-bold py-2.5 sm:py-3 rounded-xl text-[13px] sm:text-[13.5px] transition-all duration-300 flex items-center justify-center gap-2 group/wa shadow-[0_4px_16px_rgba(37,211,102,0.12)] hover:shadow-[0_4px_25px_rgba(37,211,102,0.4)] hover:-translate-y-0.5 cursor-pointer backdrop-blur-sm"
-        >
-          <MessageCircle size={15} className="text-[#25D366] group-hover/wa:text-[#0a0a0b] transition-colors" />
-          <span>Book via WhatsApp</span>
-        </a>
+            <a
+              href={generateWhatsAppBookingUrl(dest)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full bg-[#25D366]/15 hover:bg-[#25D366] text-[#25D366] hover:text-[#0a0a0b] border border-[#25D366]/40 hover:border-[#25D366] font-bold py-3 rounded-xl text-[13px] sm:text-[13.5px] transition-all duration-300 flex items-center justify-center gap-2 group/wa shadow-[0_4px_16px_rgba(37,211,102,0.12)] hover:shadow-[0_4px_25px_rgba(37,211,102,0.4)] hover:-translate-y-0.5 cursor-pointer backdrop-blur-sm active:scale-98"
+            >
+              <MessageCircle size={15} className="text-[#25D366] group-hover/wa:text-[#0a0a0b] transition-colors" />
+              <span>Book via WhatsApp</span>
+            </a>
+          </>
+        )}
       </div>
     </motion.article>
   );
@@ -624,20 +671,54 @@ export function TourDetailsModal({ dest, onClose, onOpenBook }) {
 
           {/* Fixed Bottom Action Bar - Outside scroll area: NEVER overlaps content */}
           <div className="shrink-0 px-4 sm:px-6 md:px-8 py-3.5 sm:py-4 bg-[#0e0e12] border-t border-white/10 flex flex-col sm:flex-row gap-2.5 sm:gap-3 shadow-[0_-12px_32px_rgba(0,0,0,0.65)] z-20">
-            <button
-              onClick={() => { onClose(); onOpenBook(dest); }}
-              className="flex-1 bg-gradient-to-r from-[#c9a96e] to-[#e07b39] text-[#0a0a0b] font-bold py-3.5 px-6 rounded-xl text-[14px] transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_25px_rgba(201,169,110,0.4)] flex justify-center items-center gap-2 shadow-lg cursor-pointer active:scale-98"
-            >
-              <Calendar size={16} /> Book Now
-            </button>
-            <a
-              href={generateWhatsAppBookingUrl(dest)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-6 py-3.5 rounded-xl border border-[#25D366]/40 bg-[#25D366]/15 hover:bg-[#25D366] text-[#25D366] hover:text-[#0a0a0b] text-[13.5px] font-bold transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5 shadow-[0_4px_16px_rgba(37,211,102,0.15)] hover:shadow-[0_6px_24px_rgba(37,211,102,0.35)] cursor-pointer group/wa active:scale-98"
-            >
-              <MessageCircle size={16} className="text-[#25D366] group-hover/wa:text-[#0a0a0b] transition-colors" /> Book via WhatsApp
-            </a>
+            {dest.status === 'Ongoing' ? (
+              <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 bg-emerald-950/40 border border-emerald-500/30 rounded-xl p-3 sm:px-5">
+                <div className="flex items-center gap-2.5 text-emerald-400 font-semibold text-xs sm:text-sm">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400" />
+                  </span>
+                  This tour is currently ongoing / in progress.
+                </div>
+                <a
+                  href="/contact"
+                  onClick={onClose}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#c9a96e] to-[#e07b39] text-[#0a0a0b] font-bold text-xs sm:text-sm hover:brightness-110 transition-all shrink-0 cursor-pointer shadow-md"
+                >
+                  Enquire for Next Batch
+                </a>
+              </div>
+            ) : dest.status === 'Past' ? (
+              <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 bg-white/5 border border-white/10 rounded-xl p-3 sm:px-5">
+                <span className="text-slate-300 font-semibold text-xs sm:text-sm">
+                  This tour was completed successfully. Check our upcoming tours for open bookings!
+                </span>
+                <a
+                  href="/destinations"
+                  onClick={onClose}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#c9a96e] to-[#e07b39] text-[#0a0a0b] font-bold text-xs sm:text-sm hover:brightness-110 transition-all shrink-0 cursor-pointer shadow-md"
+                >
+                  View Upcoming Tours
+                </a>
+              </div>
+            ) : (
+              <>
+                <button
+                  onClick={() => { onClose(); onOpenBook && onOpenBook(dest); }}
+                  className="flex-1 bg-gradient-to-r from-[#c9a96e] to-[#e07b39] text-[#0a0a0b] font-bold py-3.5 px-6 rounded-xl text-[14px] transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_25px_rgba(201,169,110,0.4)] flex justify-center items-center gap-2 shadow-lg cursor-pointer active:scale-98"
+                >
+                  <Calendar size={16} /> Book Now
+                </button>
+                <a
+                  href={generateWhatsAppBookingUrl(dest)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-6 py-3.5 rounded-xl border border-[#25D366]/40 bg-[#25D366]/15 hover:bg-[#25D366] text-[#25D366] hover:text-[#0a0a0b] text-[13.5px] font-bold transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5 shadow-[0_4px_16px_rgba(37,211,102,0.15)] hover:shadow-[0_6px_24px_rgba(37,211,102,0.35)] cursor-pointer group/wa active:scale-98"
+                >
+                  <MessageCircle size={16} className="text-[#25D366] group-hover/wa:text-[#0a0a0b] transition-colors" /> Book via WhatsApp
+                </a>
+              </>
+            )}
           </div>
         </div>
       </motion.div>

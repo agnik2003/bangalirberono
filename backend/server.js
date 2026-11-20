@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const path = require('path');
+const fs = require('fs');
 const connectDB = require('./config/db');
 
 // Import Routes
@@ -16,6 +18,7 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
 const emailRoutes = require('./routes/emailRoutes');
 const customerRoutes = require('./routes/customers');
+const galleryRoutes = require('./routes/galleryRoutes');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -75,6 +78,13 @@ const corsOptions = {
   ]
 };
 
+// Ensure gallery upload dir exists (folder 'gallery' at project root alongside backend & frontend)
+const galleryDir = path.join(__dirname, '..', 'gallery');
+if (!fs.existsSync(galleryDir)) fs.mkdirSync(galleryDir, { recursive: true });
+
+// Serve gallery images as static files
+app.use('/gallery', express.static(galleryDir));
+
 app.use(cors(corsOptions));
 
 app.use(express.json({ limit: '20mb' })); // allow large base64 payloads
@@ -122,6 +132,9 @@ app.use('/email', emailRoutes);
 
 app.use('/api/customers', customerRoutes);
 app.use('/customers', customerRoutes);
+
+app.use('/api/gallery', galleryRoutes);
+app.use('/gallery-api', galleryRoutes);
 
 app.listen(PORT, () => {
   console.log(`Backend server running on http://localhost:${PORT}`);

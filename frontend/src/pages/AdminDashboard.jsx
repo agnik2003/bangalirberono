@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   LogOut, LayoutDashboard, Settings, Users, Image as ImageIcon,
   Calendar, Edit3, Trash2, CheckCircle, XCircle, Plus, X,
-  Upload, Loader2, AlertCircle, ChevronDown, ChevronUp, List, FileText, FilePlus, Printer, Search, Bell, MapPin, RefreshCw
+  Upload, Loader2, AlertCircle, ChevronDown, ChevronUp, List, FileText, FilePlus, Printer, Search, Bell, MapPin, RefreshCw,
+  Images, FolderOpen, FolderPlus, Pencil
 } from 'lucide-react';
 import { BRAND, EXPERIENCES, API, authFetch } from '../data/constants';
 import BillModal from '../components/BillModal';
@@ -539,6 +540,39 @@ export default function AdminDashboard() {
   const dragOverItem = useRef(null);
   const [toastMessage, setToastMessage] = useState(null);
 
+  // ── Gallery State ─────────────────────────────────────────────────────────
+  const [galleryFolders, setGalleryFolders] = useState([]);
+  const [loadingGallery, setLoadingGallery] = useState(false);
+  const [galleryActiveFolder, setGalleryActiveFolder] = useState(null);
+  const [galleryImages, setGalleryImages] = useState([]);
+  const [loadingGalleryImages, setLoadingGalleryImages] = useState(false);
+
+  // Folder form
+  const [showFolderForm, setShowFolderForm] = useState(false);
+  const [editingFolder, setEditingFolder] = useState(null);
+  const [folderForm, setFolderForm] = useState({ name: '', description: '', imageType: '' });
+  const [folderCoverFile, setFolderCoverFile] = useState(null);
+  const [folderCoverPreview, setFolderCoverPreview] = useState('');
+  const [savingFolder, setSavingFolder] = useState(false);
+  const [folderError, setFolderError] = useState('');
+  const folderCoverRef = useRef();
+
+  // Image upload
+  const [showImageUpload, setShowImageUpload] = useState(false);
+  const [imageUploadFile, setImageUploadFile] = useState(null);
+  const [imageUploadPreview, setImageUploadPreview] = useState('');
+  const [imageUploadHeading, setImageUploadHeading] = useState('');
+  const [imageUploadCaption, setImageUploadCaption] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageUploadError, setImageUploadError] = useState('');
+  const imageUploadRef = useRef();
+
+  // Edit image caption/heading
+  const [editingImage, setEditingImage] = useState(null);
+  const [editImageHeading, setEditImageHeading] = useState('');
+  const [editImageCaption, setEditImageCaption] = useState('');
+  const [savingImageEdit, setSavingImageEdit] = useState(false);
+
   const [dateFilter, setDateFilter] = useState('all');
   const [packageFilter, setPackageFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -832,6 +866,133 @@ Thank you for choosing Bangalir Berano!`;
     } catch { } finally { setLoadingCategories(false); }
   }, []);
 
+  // ── Gallery helpers ───────────────────────────────────────────────────────
+  const fetchGalleryFolders = useCallback(async () => {
+    setLoadingGallery(true);
+    try {
+      const res = await authFetch(`${API}/gallery/folders`);
+      const data = await res.json();
+      if (data.success) setGalleryFolders(data.data);
+    } catch { } finally { setLoadingGallery(false); }
+  }, []);
+
+  const fetchGalleryImages = useCallback(async (folderId) => {
+    setLoadingGalleryImages(true);
+    try {
+      const res = await authFetch(`${API}/gallery/images?folder=${folderId}`);
+      const data = await res.json();
+      if (data.success) setGalleryImages(data.data);
+    } catch { } finally { setLoadingGalleryImages(false); }
+  }, []);
+
+  const handleSaveFolder = async (e) => {
+    e.preventDefault();
+    setFolderError('');
+    if (!folderForm.name.trim()) { setFolderError('Folder name is required'); return; }
+    setSavingFolder(true);
+    try {
+      const fd = new FormData();
+      fd.append('name', folderForm.name.trim());
+      fd.append('description', folderForm.description.trim());
+      fd.append('imageType', folderForm.imageType.trim());
+      if (folderCoverFile) fd.append('image', folderCoverFile);
+
+      const url = editingFolder ? `${API}/gallery/folders/${editingFolder._id}` : `${API}/gallery/folders`;
+      const method = editingFolder ? 'PUT' : 'POST';
+      const res = await authFetch(url, { method, body: fd });
+      const data = await res.json();
+      if (data.success) {
+        setShowFolderForm(false);
+        setEditingFolder(null);
+        setFolderForm({ name: '', description: '', imageType: '' });
+        setFolderCoverFile(null);
+        setFolderCoverPreview('');
+        fetchGalleryFolders();
+        setToastMessage(editingFolder ? 'Folder updated!' : 'Folder created!');
+        setTimeout(() => setToastMessage(null), 3000);
+      } else {
+        setFolderError(data.error || 'Failed to save folder');
+      }
+    } catch { setFolderError('Network error'); } finally { setSavingFolder(false); }
+  };
+
+  const handleDeleteFolder = async (folderId) => {
+    if (!window.confirm('Delete this folder and ALL its images? This cannot be undone.')) return;
+    try {
+      const res = await authFetch(`${API}/gallery/folders/${folderId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        fetchGalleryFolders();
+        if (galleryActiveFolder?._id === folderId) { setGalleryActiveFolder(null); setGalleryImages([]); }
+        setToastMessage('Folder deleted');
+        setTimeout(() => setToastMessage(null), 3000);
+      } else alert(data.error || 'Failed to delete');
+    } catch { alert('Network error'); }
+  };
+
+  const handleUploadImage = async (e) => {
+    e.preventDefault();
+    setImageUploadError('');
+    if (!imageUploadFile) { setImageUploadError('Please select an image'); return; }
+    if (!galleryActiveFolder) { setImageUploadError('No folder selected'); return; }
+    setUploadingImage(true);
+    try {
+      const fd = new FormData();
+      fd.append('folder', galleryActiveFolder._id);
+      fd.append('heading', imageUploadHeading.trim());
+      fd.append('caption', imageUploadCaption.trim());
+      fd.append('image', imageUploadFile);
+      const res = await authFetch(`${API}/gallery/images`, { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.success) {
+        setShowImageUpload(false);
+        setImageUploadFile(null);
+        setImageUploadPreview('');
+        setImageUploadHeading('');
+        setImageUploadCaption('');
+        fetchGalleryImages(galleryActiveFolder._id);
+        fetchGalleryFolders();
+        setToastMessage('Image uploaded!');
+        setTimeout(() => setToastMessage(null), 3000);
+      } else {
+        setImageUploadError(data.error || 'Upload failed');
+      }
+    } catch { setImageUploadError('Network error'); } finally { setUploadingImage(false); }
+  };
+
+  const handleDeleteGalleryImage = async (imageId) => {
+    if (!window.confirm('Delete this image?')) return;
+    try {
+      const res = await authFetch(`${API}/gallery/images/${imageId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        setGalleryImages(prev => prev.filter(i => i._id !== imageId));
+        fetchGalleryFolders();
+        setToastMessage('Image deleted');
+        setTimeout(() => setToastMessage(null), 3000);
+      } else alert(data.error || 'Failed to delete image');
+    } catch { alert('Network error'); }
+  };
+
+  const handleSaveImageEdit = async () => {
+    if (!editingImage) return;
+    setSavingImageEdit(true);
+    try {
+      const res = await authFetch(`${API}/gallery/images/${editingImage._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ heading: editImageHeading, caption: editImageCaption }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setGalleryImages(prev => prev.map(i => i._id === editingImage._id ? { ...i, heading: editImageHeading, caption: editImageCaption } : i));
+        setEditingImage(null);
+        setToastMessage('Caption updated!');
+        setTimeout(() => setToastMessage(null), 3000);
+      }
+    } catch { } finally { setSavingImageEdit(false); }
+  };
+
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -841,13 +1002,13 @@ Thank you for choosing Bangalir Berano!`;
           navigate('/admin');
           return;
         }
-        fetchEnquiries(); fetchBookings(); fetchPackages(); fetchCategories(); fetchBills(); fetchCustomers();
+        fetchEnquiries(); fetchBookings(); fetchPackages(); fetchCategories(); fetchBills(); fetchCustomers(); fetchGalleryFolders();
       } catch {
         navigate('/admin');
       }
     };
     checkAuth();
-  }, [navigate, fetchEnquiries, fetchBookings, fetchPackages, fetchCategories, fetchBills, fetchCustomers]);
+  }, [navigate, fetchEnquiries, fetchBookings, fetchPackages, fetchCategories, fetchBills, fetchCustomers, fetchGalleryFolders]);
 
   const handleApproveEnquiry = async (id) => {
     if (!window.confirm('Approve this enquiry and move to Bookings?')) return;
@@ -987,6 +1148,7 @@ Thank you for choosing Bangalir Berano!`;
     { id: 'customers-ext', label: 'All Customers', icon: Users, count: customers.length },
     { id: 'packages', label: 'Packages', icon: ImageIcon, count: packages.length },
     { id: 'categories', label: 'Categories', icon: List, count: categories.length },
+    { id: 'gallery', label: 'Gallery', icon: ImageIcon, count: galleryFolders.length },
     { id: 'notifications', label: 'Notifications', icon: Bell, count: notifications.length },
   ];
 
@@ -1037,6 +1199,11 @@ Thank you for choosing Bangalir Berano!`;
                 <button onClick={() => {
                   if (id === 'customers-ext') {
                     window.open('/admin/all-customers', '_blank');
+                  } else if (id === 'gallery') {
+                    setActiveTab(id);
+                    fetchGalleryFolders();
+                    setGalleryActiveFolder(null);
+                    setGalleryImages([]);
                   } else {
                     setActiveTab(id);
                     if (id === 'packages') fetchPackages();
@@ -1770,6 +1937,234 @@ Thank you for choosing Bangalir Berano!`;
         )}
 
         {/* === === === ===  NOTIFICATIONS === === === ===  */}
+        {/* === === === ===  GALLERY === === === ===  */}
+        {activeTab === 'gallery' && (() => {
+          const BASE = API.replace('/api', '');
+          return (
+            <div>
+              <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900">
+                    {galleryActiveFolder ? (
+                      <span className="flex items-center gap-2">
+                        <button onClick={() => { setGalleryActiveFolder(null); setGalleryImages([]); }} className="text-indigo-500 hover:text-indigo-700 text-sm font-semibold">← Albums</button>
+                        <span className="text-slate-300">/</span>
+                        {galleryActiveFolder.name}
+                      </span>
+                    ) : 'Gallery Albums'}
+                  </h2>
+                  <p className="text-slate-400 text-sm mt-1">
+                    {galleryActiveFolder
+                      ? `${galleryImages.length} photos in this album`
+                      : `${galleryFolders.length} albums`}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  {galleryActiveFolder ? (
+                    <button onClick={() => { setShowImageUpload(true); setImageUploadFile(null); setImageUploadPreview(''); setImageUploadHeading(''); setImageUploadCaption(''); setImageUploadError(''); }} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors shadow-sm">
+                      <Upload size={15} /> Upload Photo
+                    </button>
+                  ) : (
+                    <button onClick={() => { setShowFolderForm(true); setEditingFolder(null); setFolderForm({ name: '', description: '', imageType: '' }); setFolderCoverFile(null); setFolderCoverPreview(''); setFolderError(''); }} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors shadow-sm">
+                      <Plus size={15} /> New Album
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {!galleryActiveFolder && (
+                <>
+                  {loadingGallery ? (
+                    <div className="text-center py-16 text-slate-400">Loading albums...</div>
+                  ) : galleryFolders.length === 0 ? (
+                    <div className="text-center py-16">
+                      <div className="w-16 h-16 rounded-full bg-indigo-50 flex items-center justify-center mx-auto mb-4"><ImageIcon size={28} className="text-indigo-400" /></div>
+                      <p className="text-slate-500 font-semibold">No albums yet</p>
+                      <p className="text-slate-400 text-sm mt-1">Create your first album to start adding photos.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {galleryFolders.map(folder => {
+                        const cover = folder.coverImage ? (folder.coverImage.startsWith('http') ? folder.coverImage : `${BASE}${folder.coverImage}`) : null;
+                        return (
+                          <div key={folder._id} className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm group hover:shadow-md transition-shadow">
+                            <div className="relative h-40 bg-slate-100 cursor-pointer" onClick={() => { setGalleryActiveFolder(folder); fetchGalleryImages(folder._id); }}>
+                              {cover ? <img src={cover} alt={folder.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" /> : <div className="w-full h-full flex items-center justify-center"><ImageIcon size={32} className="text-slate-300" /></div>}
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors" />
+                              {folder.imageType && <span className="absolute top-2 left-2 text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-black/50 text-white">{folder.imageType}</span>}
+                            </div>
+                            <div className="p-3">
+                              <h3 className="font-bold text-slate-900 text-sm truncate cursor-pointer hover:text-indigo-600 transition-colors" onClick={() => { setGalleryActiveFolder(folder); fetchGalleryImages(folder._id); }}>{folder.name}</h3>
+                              {folder.description && <p className="text-slate-400 text-xs mt-0.5 line-clamp-1">{folder.description}</p>}
+                              <div className="flex items-center justify-between mt-3">
+                                <span className="text-xs text-slate-400 font-semibold">{folder.imageCount || 0} photos</span>
+                                <div className="flex gap-1">
+                                  <button onClick={() => { setEditingFolder(folder); setFolderForm({ name: folder.name, description: folder.description || '', imageType: folder.imageType || '' }); setFolderCoverPreview(folder.coverImage ? (folder.coverImage.startsWith('http') ? folder.coverImage : `${BASE}${folder.coverImage}`) : ''); setFolderCoverFile(null); setFolderError(''); setShowFolderForm(true); }} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Edit album"><Edit3 size={14} /></button>
+                                  <button onClick={() => handleDeleteFolder(folder._id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete album"><Trash2 size={14} /></button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {galleryActiveFolder && (
+                <>
+                  {loadingGalleryImages ? (
+                    <div className="text-center py-16 text-slate-400">Loading photos...</div>
+                  ) : galleryImages.length === 0 ? (
+                    <div className="text-center py-16">
+                      <div className="w-16 h-16 rounded-full bg-indigo-50 flex items-center justify-center mx-auto mb-4"><Upload size={28} className="text-indigo-400" /></div>
+                      <p className="text-slate-500 font-semibold">No photos yet</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                      {galleryImages.map(img => {
+                        const src = img.url.startsWith('http') ? img.url : `${BASE}${img.url}`;
+                        return (
+                          <div key={img._id} className="relative group border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
+                            <div className="relative aspect-[4/3]">
+                              <img src={src} alt={img.heading || img.caption || 'Gallery'} className="w-full h-full object-cover" loading="lazy" />
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                                <button onClick={() => { setEditingImage(img); setEditImageHeading(img.heading || ''); setEditImageCaption(img.caption || ''); }} className="p-2 bg-white/90 rounded-lg text-slate-700 hover:bg-white hover:text-indigo-600 transition-colors" title="Edit caption"><Edit3 size={14} /></button>
+                                <button onClick={() => handleDeleteGalleryImage(img._id)} className="p-2 bg-white/90 rounded-lg text-slate-700 hover:bg-white hover:text-red-600 transition-colors" title="Delete"><Trash2 size={14} /></button>
+                              </div>
+                            </div>
+                            {(img.heading || img.caption) && (
+                              <div className="p-2">
+                                {img.heading && <p className="text-slate-900 font-semibold text-[11px] truncate">{img.heading}</p>}
+                                {img.caption && <p className="text-slate-400 text-[10px] truncate mt-0.5">{img.caption}</p>}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {showFolderForm && (
+                <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 overflow-y-auto">
+                  <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 my-4">
+                    <div className="flex items-center justify-between mb-5">
+                      <h3 className="text-lg font-bold text-slate-900">{editingFolder ? 'Edit Album' : 'New Album'}</h3>
+                      <button onClick={() => setShowFolderForm(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200"><X size={16} /></button>
+                    </div>
+                    <form onSubmit={handleSaveFolder} className="space-y-4">
+                      {folderError && <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-600 text-sm"><AlertCircle size={15} />{folderError}</div>}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Album Name *</label>
+                        <input value={folderForm.name} onChange={e => setFolderForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Gangtok Tour 2024" className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 focus:outline-none focus:border-indigo-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Image Type / Tag</label>
+                        <input value={folderForm.imageType} onChange={e => setFolderForm(f => ({ ...f, imageType: e.target.value }))} placeholder="e.g. Hill Station, Beach, Family Tour" className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-indigo-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Description</label>
+                        <textarea value={folderForm.description} onChange={e => setFolderForm(f => ({ ...f, description: e.target.value }))} rows={2} placeholder="Brief description..." className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 resize-none" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Cover Image</label>
+                        <div onClick={() => folderCoverRef.current?.click()} className="relative cursor-pointer border-2 border-dashed border-slate-200 hover:border-indigo-400 rounded-xl overflow-hidden transition-colors">
+                          {folderCoverPreview ? (
+                            <div className="relative"><img src={folderCoverPreview} alt="Cover" className="w-full h-32 object-cover" /><div className="absolute inset-0 bg-white/80 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-indigo-600 font-bold text-sm"><Upload size={16} /> Change Cover</div></div>
+                          ) : (
+                            <div className="h-24 flex items-center justify-center gap-3 text-slate-400"><Upload size={22} /><span className="text-sm font-semibold">Upload cover image</span></div>
+                          )}
+                        </div>
+                        <input ref={folderCoverRef} type="file" accept="image/*" onChange={e => { const f = e.target.files[0]; if (!f) return; setFolderCoverFile(f); const reader = new FileReader(); reader.onload = ev => setFolderCoverPreview(ev.target.result); reader.readAsDataURL(f); }} className="hidden" />
+                      </div>
+                      <div className="flex gap-3 pt-2">
+                        <button type="button" onClick={() => setShowFolderForm(false)} className="flex-1 py-3 border-2 border-slate-200 rounded-xl text-slate-500 font-bold text-sm hover:bg-slate-50">Cancel</button>
+                        <button type="submit" disabled={savingFolder} className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 disabled:opacity-60 flex items-center justify-center gap-2">
+                          {savingFolder ? <><Loader2 size={15} className="animate-spin" /> Saving...</> : editingFolder ? 'Save Changes' : '+ Create Album'}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {showImageUpload && (
+                <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 overflow-y-auto">
+                  <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 my-4">
+                    <div className="flex items-center justify-between mb-5">
+                      <h3 className="text-lg font-bold text-slate-900">Upload Photo</h3>
+                      <button onClick={() => setShowImageUpload(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200"><X size={16} /></button>
+                    </div>
+                    <form onSubmit={handleUploadImage} className="space-y-4">
+                      {imageUploadError && <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-600 text-sm"><AlertCircle size={15} />{imageUploadError}</div>}
+                      <div>
+                        <div onClick={() => imageUploadRef.current?.click()} className="relative cursor-pointer border-2 border-dashed border-indigo-200 hover:border-indigo-400 bg-indigo-50/40 rounded-xl overflow-hidden transition-colors">
+                          {imageUploadPreview ? (
+                            <div className="relative"><img src={imageUploadPreview} alt="Preview" className="w-full h-44 object-cover" /><div className="absolute inset-0 bg-white/80 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-indigo-600 font-bold text-sm"><Upload size={16} /> Change Image</div></div>
+                          ) : (
+                            <div className="h-36 flex flex-col items-center justify-center gap-3 text-indigo-500"><Upload size={28} /><span className="text-sm font-bold text-slate-600">Click to select image (JPG, PNG, WEBP)</span><span className="text-xs text-slate-400">Auto-compressed for fast loading</span></div>
+                          )}
+                        </div>
+                        <input ref={imageUploadRef} type="file" accept="image/*" onChange={e => { const f = e.target.files[0]; if (!f) return; setImageUploadFile(f); const reader = new FileReader(); reader.onload = ev => setImageUploadPreview(ev.target.result); reader.readAsDataURL(f); }} className="hidden" />
+                        {imageUploadFile && (
+                          <div className="mt-2 flex items-center justify-between bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2">
+                            <span className="text-xs text-indigo-600 font-semibold truncate">📎 {imageUploadFile.name}</span>
+                            <button type="button" onClick={() => { setImageUploadFile(null); setImageUploadPreview(''); }} className="text-xs text-slate-400 hover:text-red-600 ml-2 shrink-0">✕</button>
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Heading</label>
+                        <input value={imageUploadHeading} onChange={e => setImageUploadHeading(e.target.value)} placeholder="e.g. Morning at Nathula Pass" className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-indigo-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Caption</label>
+                        <textarea value={imageUploadCaption} onChange={e => setImageUploadCaption(e.target.value)} rows={2} placeholder="A brief caption..." className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 resize-none" />
+                      </div>
+                      <div className="flex gap-3 pt-2">
+                        <button type="button" onClick={() => setShowImageUpload(false)} className="flex-1 py-3 border-2 border-slate-200 rounded-xl text-slate-500 font-bold text-sm hover:bg-slate-50">Cancel</button>
+                        <button type="submit" disabled={uploadingImage} className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 disabled:opacity-60 flex items-center justify-center gap-2">
+                          {uploadingImage ? <><Loader2 size={15} className="animate-spin" /> Uploading...</> : 'Upload Photo'}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {editingImage && (
+                <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+                  <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+                    <div className="flex items-center justify-between mb-5">
+                      <h3 className="text-lg font-bold text-slate-900">Edit Caption</h3>
+                      <button onClick={() => setEditingImage(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200"><X size={16} /></button>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Heading</label>
+                        <input value={editImageHeading} onChange={e => setEditImageHeading(e.target.value)} placeholder="Image heading..." className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-indigo-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Caption</label>
+                        <textarea value={editImageCaption} onChange={e => setEditImageCaption(e.target.value)} rows={3} placeholder="Image caption..." className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 resize-none" />
+                      </div>
+                      <div className="flex gap-3 pt-1">
+                        <button onClick={() => setEditingImage(null)} className="flex-1 py-3 border-2 border-slate-200 rounded-xl text-slate-500 font-bold text-sm hover:bg-slate-50">Cancel</button>
+                        <button onClick={handleSaveImageEdit} disabled={savingImageEdit} className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 disabled:opacity-60 flex items-center justify-center gap-2">
+                          {savingImageEdit ? <><Loader2 size={15} className="animate-spin" /> Saving...</> : 'Save'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
         {activeTab === 'notifications' && (
           <div className="max-w-4xl">
             <div className="flex items-center justify-between mb-4">
