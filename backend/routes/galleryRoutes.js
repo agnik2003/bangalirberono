@@ -3,6 +3,10 @@ const router = express.Router();
 const gc = require('../controllers/galleryController');
 const authMiddleware = require('../middleware/authMiddleware');
 
+// ── Direct image serving (public GET) ─────────────────────────────────────────
+// Guaranteed to pass through any standard Nginx setup that proxies /api/
+router.get('/file/:filename', gc.serveFile);
+
 // ── Folders (public GET, auth for mutations) ──────────────────────────────────
 router.get('/folders', gc.getFolders);
 router.post('/folders', authMiddleware, gc.uploadMiddleware, gc.createFolder);

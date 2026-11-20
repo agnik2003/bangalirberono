@@ -72,7 +72,7 @@ exports.createFolder = async (req, res) => {
     let coverImage = '';
     if (req.file) {
       const filename = await saveCompressed(req.file.buffer, req.file.originalname);
-      coverImage = `/gallery/${filename}`;
+      coverImage = `/api/gallery/file/${filename}`;
     }
 
     const folder = await GalleryFolder.create({
@@ -98,7 +98,7 @@ exports.updateFolder = async (req, res) => {
 
     if (req.file) {
       const filename = await saveCompressed(req.file.buffer, req.file.originalname);
-      update.coverImage = `/gallery/${filename}`;
+      update.coverImage = `/api/gallery/file/${filename}`;
       // Delete old cover image if exists
       const old = await GalleryFolder.findById(req.params.id);
       if (old && old.coverImage) {
@@ -177,7 +177,7 @@ exports.uploadImage = async (req, res) => {
     const filename = await saveCompressed(req.file.buffer, req.file.originalname);
     const image = await GalleryImage.create({
       folder,
-      url: `/gallery/${filename}`,
+      url: `/api/gallery/file/${filename}`,
       filename,
       heading: (heading || '').trim(),
       caption: (caption || '').trim(),
@@ -185,12 +185,27 @@ exports.uploadImage = async (req, res) => {
 
     // Auto-set folder cover if none
     if (!folderDoc.coverImage) {
-      await GalleryFolder.findByIdAndUpdate(folder, { coverImage: `/gallery/${filename}` });
+      await GalleryFolder.findByIdAndUpdate(folder, { coverImage: `/api/gallery/file/${filename}` });
     }
 
     res.status(201).json({ success: true, data: image });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+// GET /api/gallery/file/:filename (Direct streaming endpoint)
+exports.serveFile = (req, res) => {
+  try {
+    const filename = path.basename(req.params.filename);
+    const filePath = path.join(GALLERY_DIR, filename);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).send('Image not found');
+    }
+    res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+    return res.sendFile(filePath);
+  } catch (err) {
+    return res.status(500).send('Error reading image');
   }
 };
 

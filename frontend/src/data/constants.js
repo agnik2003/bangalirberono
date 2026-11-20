@@ -1,16 +1,35 @@
 const getApiBase = () => {
+  if (typeof window !== 'undefined') {
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (!isLocal) {
+      // In production (live domain): NEVER use localhost API URL!
+      const envUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
+      if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
+        return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
+      }
+      return `${window.location.origin}/api`;
+    }
+  }
   const envUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
   if (envUrl) return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
-  if (typeof window !== 'undefined') {
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return 'http://localhost:5000/api';
-    }
-    return `${window.location.origin}/api`;
-  }
   return 'http://localhost:5000/api';
 };
 
 export const API = getApiBase();
+
+export const getGalleryImageUrl = (rawUrl) => {
+  if (!rawUrl) return '';
+  if (rawUrl.startsWith('data:') || rawUrl.startsWith('blob:')) return rawUrl;
+  if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) return rawUrl;
+
+  // Extract pure filename (handles '/gallery/xyz.webp', '/api/gallery/file/xyz.webp', or 'xyz.webp')
+  const filename = rawUrl.replace(/^.*[\\\/]/, '');
+  if (!filename) return '';
+
+  // In production, /api/ is guaranteed to be proxied to the backend port by Nginx!
+  // This guarantees images load seamlessly without requiring custom Nginx /gallery/ rules.
+  return `${API}/gallery/file/${filename}`;
+};
 
 export const authFetch = (url, options = {}) => {
   return fetch(url, {

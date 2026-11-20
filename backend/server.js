@@ -82,8 +82,9 @@ const corsOptions = {
 const galleryDir = path.join(__dirname, '..', 'gallery');
 if (!fs.existsSync(galleryDir)) fs.mkdirSync(galleryDir, { recursive: true });
 
-// Serve gallery images as static files
+// Serve gallery images as static files (both on root /gallery and /api/gallery/file)
 app.use('/gallery', express.static(galleryDir));
+app.use('/api/gallery/file', express.static(galleryDir));
 
 app.use(cors(corsOptions));
 

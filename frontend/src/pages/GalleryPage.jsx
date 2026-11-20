@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, Images, FolderOpen } from 'lucide-react';
-import { API } from '../data/constants';
+import { API, getGalleryImageUrl } from '../data/constants';
 
 // ── Lightbox ──────────────────────────────────────────────────────────────────
 function Lightbox({ images, startIndex, onClose }) {
@@ -58,7 +58,7 @@ function Lightbox({ images, startIndex, onClose }) {
         onClick={e => e.stopPropagation()}
       >
         <img
-          src={img.url.startsWith('http') ? img.url : `${API.replace('/api', '')}${img.url}`}
+          src={getGalleryImageUrl(img.url)}
           alt={img.heading || img.caption || 'Gallery image'}
           className="max-h-[80vh] max-w-full object-contain rounded-xl shadow-2xl"
           loading="lazy"
@@ -87,8 +87,7 @@ function Lightbox({ images, startIndex, onClose }) {
 
 // ── Image Card ────────────────────────────────────────────────────────────────
 function ImageCard({ image, onClick, index }) {
-  const BASE = API.replace('/api', '');
-  const src = image.url.startsWith('http') ? image.url : `${BASE}${image.url}`;
+  const src = getGalleryImageUrl(image.url);
 
   return (
     <motion.div
@@ -104,6 +103,12 @@ function ImageCard({ image, onClick, index }) {
         alt={image.heading || image.caption || 'Gallery photo'}
         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-108"
         loading="lazy"
+        onError={(e) => {
+          if (!e.target.dataset.triedFallback && image.url) {
+            e.target.dataset.triedFallback = 'true';
+            e.target.src = image.url.startsWith('http') ? image.url : `${API.replace('/api', '')}${image.url}`;
+          }
+        }}
       />
       {/* Dark Ambient Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-5">
@@ -137,10 +142,7 @@ function ImageCard({ image, onClick, index }) {
 
 // ── Folder Card ───────────────────────────────────────────────────────────────
 function FolderCard({ folder, onClick }) {
-  const BASE = API.replace('/api', '');
-  const cover = folder.coverImage
-    ? (folder.coverImage.startsWith('http') ? folder.coverImage : `${BASE}${folder.coverImage}`)
-    : null;
+  const cover = getGalleryImageUrl(folder.coverImage);
 
   return (
     <motion.div
@@ -158,6 +160,12 @@ function FolderCard({ folder, onClick }) {
             alt={folder.name}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-106"
             loading="lazy"
+            onError={(e) => {
+              if (!e.target.dataset.triedFallback && folder.coverImage) {
+                e.target.dataset.triedFallback = 'true';
+                e.target.src = folder.coverImage.startsWith('http') ? folder.coverImage : `${API.replace('/api', '')}${folder.coverImage}`;
+              }
+            }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#1a1a24] to-[#0e0e13]">

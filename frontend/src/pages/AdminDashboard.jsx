@@ -6,7 +6,7 @@ import {
   Upload, Loader2, AlertCircle, ChevronDown, ChevronUp, List, FileText, FilePlus, Printer, Search, Bell, MapPin, RefreshCw,
   Images, FolderOpen, FolderPlus, Pencil
 } from 'lucide-react';
-import { BRAND, EXPERIENCES, API, authFetch } from '../data/constants';
+import { BRAND, EXPERIENCES, API, authFetch, getGalleryImageUrl } from '../data/constants';
 import BillModal from '../components/BillModal';
 import BookingModal from '../components/BookingModal';
 
@@ -1985,11 +1985,25 @@ Thank you for choosing Bangalir Berano!`;
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                       {galleryFolders.map(folder => {
-                        const cover = folder.coverImage ? (folder.coverImage.startsWith('http') ? folder.coverImage : `${BASE}${folder.coverImage}`) : null;
+                        const cover = folder.coverImage ? getGalleryImageUrl(folder.coverImage) : null;
                         return (
                           <div key={folder._id} className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm group hover:shadow-md transition-shadow">
                             <div className="relative h-40 bg-slate-100 cursor-pointer" onClick={() => { setGalleryActiveFolder(folder); fetchGalleryImages(folder._id); }}>
-                              {cover ? <img src={cover} alt={folder.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" /> : <div className="w-full h-full flex items-center justify-center"><ImageIcon size={32} className="text-slate-300" /></div>}
+                              {cover ? (
+                                <img
+                                  src={cover}
+                                  alt={folder.name}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                  onError={(e) => {
+                                    if (!e.target.dataset.triedFallback && folder.coverImage) {
+                                      e.target.dataset.triedFallback = 'true';
+                                      e.target.src = folder.coverImage.startsWith('http') ? folder.coverImage : `${API.replace('/api', '')}${folder.coverImage}`;
+                                    }
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center"><ImageIcon size={32} className="text-slate-300" /></div>
+                              )}
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors" />
                               {folder.imageType && <span className="absolute top-2 left-2 text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-black/50 text-white">{folder.imageType}</span>}
                             </div>
@@ -1999,7 +2013,7 @@ Thank you for choosing Bangalir Berano!`;
                               <div className="flex items-center justify-between mt-3">
                                 <span className="text-xs text-slate-400 font-semibold">{folder.imageCount || 0} photos</span>
                                 <div className="flex gap-1">
-                                  <button onClick={() => { setEditingFolder(folder); setFolderForm({ name: folder.name, description: folder.description || '', imageType: folder.imageType || '' }); setFolderCoverPreview(folder.coverImage ? (folder.coverImage.startsWith('http') ? folder.coverImage : `${BASE}${folder.coverImage}`) : ''); setFolderCoverFile(null); setFolderError(''); setShowFolderForm(true); }} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Edit album"><Edit3 size={14} /></button>
+                                  <button onClick={() => { setEditingFolder(folder); setFolderForm({ name: folder.name, description: folder.description || '', imageType: folder.imageType || '' }); setFolderCoverPreview(folder.coverImage ? getGalleryImageUrl(folder.coverImage) : ''); setFolderCoverFile(null); setFolderError(''); setShowFolderForm(true); }} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Edit album"><Edit3 size={14} /></button>
                                   <button onClick={() => handleDeleteFolder(folder._id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete album"><Trash2 size={14} /></button>
                                 </div>
                               </div>
@@ -2024,11 +2038,22 @@ Thank you for choosing Bangalir Berano!`;
                   ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                       {galleryImages.map(img => {
-                        const src = img.url.startsWith('http') ? img.url : `${BASE}${img.url}`;
+                        const src = getGalleryImageUrl(img.url);
                         return (
                           <div key={img._id} className="relative group border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
                             <div className="relative aspect-[4/3]">
-                              <img src={src} alt={img.heading || img.caption || 'Gallery'} className="w-full h-full object-cover" loading="lazy" />
+                              <img
+                                src={src}
+                                alt={img.heading || img.caption || 'Gallery'}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                                onError={(e) => {
+                                  if (!e.target.dataset.triedFallback && img.url) {
+                                    e.target.dataset.triedFallback = 'true';
+                                    e.target.src = img.url.startsWith('http') ? img.url : `${API.replace('/api', '')}${img.url}`;
+                                  }
+                                }}
+                              />
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                                 <button onClick={() => { setEditingImage(img); setEditImageHeading(img.heading || ''); setEditImageCaption(img.caption || ''); }} className="p-2 bg-white/90 rounded-lg text-slate-700 hover:bg-white hover:text-indigo-600 transition-colors" title="Edit caption"><Edit3 size={14} /></button>
                                 <button onClick={() => handleDeleteGalleryImage(img._id)} className="p-2 bg-white/90 rounded-lg text-slate-700 hover:bg-white hover:text-red-600 transition-colors" title="Delete"><Trash2 size={14} /></button>
