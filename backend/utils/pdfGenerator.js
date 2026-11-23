@@ -36,16 +36,36 @@ function formatPaymentDetailsText(p) {
 }
 
 /**
- * Builds standalone, self-contained HTML for an invoice.
- * Completely offline: no external styles or fonts required.
+ * Helper to draw a crisp vector Indian Rupee symbol (₹) in PDFKit
+ */
+function drawRupee(doc, x, y, size = 8.5, color = '#0f172a') {
+  doc.save();
+  doc.strokeColor(color).lineWidth(size * 0.1);
+  const w = size * 0.65;
+  // top bar
+  doc.moveTo(x, y).lineTo(x + w, y).stroke();
+  // second bar
+  doc.moveTo(x, y + size * 0.28).lineTo(x + w, y + size * 0.28).stroke();
+  // vertical stem
+  doc.moveTo(x + size * 0.15, y).lineTo(x + size * 0.15, y + size * 0.55).stroke();
+  // curve
+  doc.moveTo(x + size * 0.15, y + size * 0.15)
+     .bezierCurveTo(x + w, y + size * 0.15, x + w, y + size * 0.55, x + size * 0.15, y + size * 0.55)
+     .stroke();
+  // diagonal leg
+  doc.moveTo(x + size * 0.2, y + size * 0.55).lineTo(x + w, y + size).stroke();
+  doc.restore();
+}
+
+/**
+ * Builds standalone HTML for an invoice that is a 100% exact carbon copy of BillPrintPage.jsx
  */
 function buildInvoiceHTML(bill) {
   const t = parseFloat(bill.totalAmount) || 0;
   const p = parseFloat(bill.advancePaid) || 0;
   const due = parseFloat(bill.dueAmount) !== undefined ? parseFloat(bill.dueAmount) : (t - p);
-  const status = bill.paymentStatus || (p === 0 ? 'PENDING' : (p >= t && t > 0 ? 'PAID' : 'PARTIALLY PAID'));
-  const statusColor = status === 'PAID' ? '#059669' : (status === 'PENDING' ? '#64748b' : '#ea580c');
-  const statusBg = status === 'PAID' ? '#ecfdf5' : (status === 'PENDING' ? '#f1f5f9' : '#fff7ed');
+  const paymentStatus = bill.paymentStatus || (p === 0 ? 'PENDING' : (p >= t && t > 0 ? 'PAID' : 'PARTIALLY PAID'));
+  const statusColor = paymentStatus === 'PAID' ? '#059669' : (paymentStatus === 'PENDING' ? '#64748b' : '#ea580c');
 
   const items = Array.isArray(bill.items) && bill.items.length > 0
     ? bill.items
@@ -54,33 +74,33 @@ function buildInvoiceHTML(bill) {
   const payments = Array.isArray(bill.payments) ? bill.payments : [];
 
   const itemsRows = items.map(it => `
-    <tr>
-      <td style="padding:7px 10px;border:1px solid #cbd5e1;font-weight:600;color:#0f172a;">${it.description || 'Service'}</td>
-      <td style="padding:7px 10px;border:1px solid #cbd5e1;text-align:center;color:#334155;">${it.quantity !== undefined ? it.quantity : 1}</td>
-      <td style="padding:7px 10px;border:1px solid #cbd5e1;text-align:right;color:#334155;">₹${(parseFloat(it.rate) || 0).toLocaleString('en-IN')}</td>
-      <td style="padding:7px 10px;border:1px solid #cbd5e1;text-align:right;font-weight:700;color:#0f172a;">₹${(parseFloat(it.amount) || 0).toLocaleString('en-IN')}</td>
+    <tr style="border-bottom: 1px solid #e2e8f0;">
+      <td style="padding: 6px 12px; border-right: 1px solid #cbd5e1; font-weight: 600; color: #0f172a;">${it.description || 'Tour Package'}</td>
+      <td style="padding: 6px 12px; border-right: 1px solid #cbd5e1; text-align: center; color: #334155;">${it.quantity !== undefined ? it.quantity : 1}</td>
+      <td style="padding: 6px 12px; border-right: 1px solid #cbd5e1; text-align: right; color: #334155;">₹${(parseFloat(it.rate) || 0).toLocaleString('en-IN')}</td>
+      <td style="padding: 6px 12px; text-align: right; font-weight: 700; color: #0f172a;">₹${(parseFloat(it.amount) || 0).toLocaleString('en-IN')}</td>
     </tr>
   `).join('');
 
   const paymentsSection = payments.length > 0 ? `
-    <div style="margin-top:16px;">
-      <div style="font-size:11px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;border-bottom:1px solid #cbd5e1;padding-bottom:3px;">Payment History</div>
-      <table style="width:100%;border-collapse:collapse;font-size:11px;">
-        <thead>
-          <tr style="background:#f8fafc;">
-            <th style="padding:6px 8px;border:1px solid #cbd5e1;text-align:left;width:80px;">Date</th>
-            <th style="padding:6px 8px;border:1px solid #cbd5e1;text-align:left;width:95px;">Method</th>
-            <th style="padding:6px 8px;border:1px solid #cbd5e1;text-align:left;">Payment Details / Reference</th>
-            <th style="padding:6px 8px;border:1px solid #cbd5e1;text-align:right;width:90px;">Amount</th>
+    <div style="margin-bottom: 16px;">
+      <h4 style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin: 0 0 4px 0; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px;">Payment History</h4>
+      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;">
+        <thead style="color: #64748b; border-bottom: 1px solid #e2e8f0;">
+          <tr>
+            <th style="padding: 4px 0; width: 100px; text-align: left;">Date</th>
+            <th style="padding: 4px 0; width: 110px; text-align: left;">Method</th>
+            <th style="padding: 4px 0; text-align: left;">Payment Details / Reference</th>
+            <th style="padding: 4px 0; text-align: right; width: 110px;">Amount</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody style="color: #1e293b; font-weight: 600;">
           ${payments.map(pay => `
-            <tr>
-              <td style="padding:5px 8px;border:1px solid #e2e8f0;color:#334155;">${pay.date ? new Date(pay.date).toLocaleDateString('en-IN') : '-'}</td>
-              <td style="padding:5px 8px;border:1px solid #e2e8f0;font-weight:700;color:#0f172a;">${pay.method || 'Cash'}</td>
-              <td style="padding:5px 8px;border:1px solid #e2e8f0;color:#475569;">${formatPaymentDetailsText(pay)}</td>
-              <td style="padding:5px 8px;border:1px solid #e2e8f0;text-align:right;font-weight:700;color:#059669;">₹${(parseFloat(pay.amount) || 0).toLocaleString('en-IN')}</td>
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+              <td style="padding: 5px 0; color: #334155;">${pay.date ? new Date(pay.date).toLocaleDateString('en-IN') : '-'}</td>
+              <td style="padding: 5px 0; font-weight: 700; color: #0f172a;">${pay.method || 'Cash'}</td>
+              <td style="padding: 5px 0; color: #475569; font-weight: 400;">${formatPaymentDetailsText(pay)}</td>
+              <td style="padding: 5px 0; text-align: right; font-weight: 700; color: #059669;">₹${(parseFloat(pay.amount) || 0).toLocaleString('en-IN')}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -94,288 +114,157 @@ function buildInvoiceHTML(bill) {
   <meta charset="utf-8">
   <title>Invoice ${bill.billNumber || ''}</title>
   <style>
-    @page { size: A4 portrait; margin: 10mm; }
+    @page { size: A4 portrait; margin: 0; }
     * { box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-      color: #0f172a;
+    html, body {
+      margin: 0;
+      padding: 0;
       background: #ffffff;
-      margin: 0;
-      padding: 8px 12px;
-      font-size: 11.5px;
-      line-height: 1.4;
+      color: #0f172a;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
-    .header-box {
+    .page-container {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto;
+      padding: 12mm 14mm;
+      box-sizing: border-box;
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      border-bottom: 2.5px solid #1e1b4b;
-      padding-bottom: 12px;
-      margin-bottom: 12px;
-    }
-    .company-name {
-      font-size: 20px;
-      font-weight: 800;
-      color: #1e1b4b;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin: 0;
-    }
-    .company-tag {
-      font-size: 12px;
-      font-weight: 600;
-      color: #334155;
-      margin: 2px 0 4px;
-    }
-    .company-addr {
-      font-size: 10.5px;
-      color: #64748b;
-      line-height: 1.35;
-      max-width: 340px;
-    }
-    .company-right {
-      text-align: right;
-      font-size: 10.5px;
-      color: #475569;
-      line-height: 1.45;
-    }
-    .invoice-title-wrap {
-      text-align: center;
-      margin: 8px 0 14px;
-    }
-    .invoice-title {
-      display: inline-block;
-      border: 1.5px solid #1e1b4b;
-      padding: 3px 20px;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 2px;
-      color: #1e1b4b;
-      border-radius: 4px;
-    }
-    .info-grid {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 14px;
-    }
-    .billed-to {
-      width: 56%;
-    }
-    .bill-meta-box {
-      width: 40%;
-      background: #f8fafc;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      padding: 10px 12px;
-    }
-    .meta-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 5px;
-    }
-    .meta-row:last-child {
-      margin-bottom: 0;
-    }
-    .label {
-      font-size: 9.5px;
-      font-weight: 700;
-      color: #64748b;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .val-bold {
-      font-weight: 700;
-      color: #1e1b4b;
-    }
-    table.items-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 12px;
-    }
-    table.items-table th {
-      background: #f1f5f9;
-      color: #475569;
-      font-size: 9.5px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      padding: 7px 10px;
-      border: 1px solid #cbd5e1;
-    }
-    .summary-wrap {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 10px;
-      margin-bottom: 14px;
-    }
-    .summary-box {
-      width: 44%;
-    }
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 3px 0;
-      font-size: 11.5px;
-    }
-    .summary-total {
-      font-size: 13.5px;
-      font-weight: 800;
-      border-top: 1.5px solid #1e1b4b;
-      border-bottom: 1px solid #cbd5e1;
-      padding: 5px 0;
-      color: #1e1b4b;
-      margin-top: 2px;
-    }
-    .due-box {
-      background: #fef3c7;
-      border: 1px solid #fde68a;
-      border-radius: 6px;
-      padding: 5px 8px;
-      margin-top: 5px;
-      font-size: 12.5px;
-      font-weight: 800;
-      color: #92400e;
-      display: flex;
-      justify-content: space-between;
-    }
-    .status-badge {
-      display: inline-block;
-      padding: 2px 10px;
-      border-radius: 99px;
-      font-size: 10.5px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .footer-box {
-      margin-top: 20px;
-      padding-top: 10px;
-      border-top: 1px solid #cbd5e1;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      font-size: 9.5px;
-      color: #64748b;
+      flex-direction: column;
     }
   </style>
 </head>
 <body>
-  <div class="header-box">
-    <div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-        ${logoBase64 ? `<img src="${logoBase64}" alt="Logo" style="width:34px;height:34px;border-radius:50%;object-fit:cover;">` : ''}
-        <h1 class="company-name" style="display:inline-flex;align-items:baseline;margin:0;">BANGALIR BERANO<sup style="font-size:9px;margin-left:2px;position:relative;top:-3px;">TM</sup></h1>
+  <div class="page-container">
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #1e1b4b; padding-bottom: 16px; margin-bottom: 16px;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+          ${logoBase64 ? `<img src="${logoBase64}" alt="Bangalir Berano Logo" style="height: 32px; width: 32px; border-radius: 9999px; object-fit: cover;" />` : ''}
+          <h1 style="font-size: 20px; font-weight: 800; color: #1e1b4b; text-transform: uppercase; letter-spacing: 0.05em; display: inline-flex; align-items: baseline; margin: 0;">
+            BANGALIR BERANO<sup style="font-size: 10px; font-weight: 700; color: #1e1b4b; margin-left: 2px; position: relative; top: -4px;">TM</sup>
+          </h1>
+        </div>
+        <p style="font-size: 14px; font-weight: 600; color: #334155; margin: 0 0 4px 0;">Tours and Travels Operator</p>
+        <p style="font-size: 12px; color: #475569; margin: 0; line-height: 1.4;">
+          42, B G G Sarani, Radha Neel Nibas-II, Bhadrakali, Uttarpara, Hooghly, WB - 712232.<br/>
+          Land Mark : Near Bhadrakali Youth Core Club.
+        </p>
       </div>
-      <p class="company-tag">Tours and Travels Operator</p>
-      <div class="company-addr">
-        42, B G G Sarani, Radha Neel Nibas-II, Bhadrakali, Uttarpara, Hooghly, WB - 712232.<br>
-        Land Mark: Near Bhadrakali Youth Core Club.
+      <div style="text-align: right; font-size: 12px; color: #475569; line-height: 1.5; margin-top: 8px;">
+        <p style="margin: 0;"><span style="font-weight: 700;">MSME:</span> UDYAM-WB-07-0135043</p>
+        <p style="margin: 0;"><span style="font-weight: 700;">Trade License:</span> 0917P1800240190</p>
+        <p style="margin: 0;"><span style="font-weight: 700;">Phone:</span> +91 9830033647</p>
+        <p style="margin: 0;"><span style="font-weight: 700;">Email:</span> contact@bangalirberano.com</p>
       </div>
     </div>
-    <div class="company-right">
-      <div><strong>MSME:</strong> UDYAM-WB-07-0135043</div>
-      <div><strong>Trade License:</strong> 0917P1800240190</div>
-      <div><strong>Phone:</strong> +91 9830053647</div>
-      <div><strong>Email:</strong> contact@bangalirberano.com</div>
+
+    <!-- INVOICE Badge -->
+    <div style="text-align: center; margin-bottom: 16px;">
+      <h2 style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #1e293b; border: 1px solid #1e293b; display: inline-block; padding: 4px 16px; margin: 0;">INVOICE</h2>
     </div>
-  </div>
 
-  <div class="invoice-title-wrap">
-    <span class="invoice-title">INVOICE</span>
-  </div>
+    <!-- Details Grid -->
+    <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+      <div style="width: 50%;">
+        <p style="font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 700; margin: 0 0 4px 0;">Bill To:</p>
+        <h3 style="font-size: 12px; font-weight: 700; color: #0f172a; margin: 0;">${bill.customerName || 'Guest'}</h3>
+        ${bill.customerAddress ? `<p style="font-size: 12px; color: #334155; margin: 2px 0 0 0;">${bill.customerAddress}</p>` : ''}
+        <p style="font-size: 12px; color: #334155; margin: 2px 0 0 0;">${bill.customerPhone || ''}</p>
+        ${bill.customerEmail ? `<p style="font-size: 12px; color: #334155; margin: 2px 0 0 0;">${bill.customerEmail}</p>` : ''}
 
-  <div class="info-grid">
-    <div class="billed-to">
-      <div class="label">BILLED TO:</div>
-      <div style="font-size:13.5px;font-weight:700;color:#0f172a;margin:2px 0;">${bill.customerName || 'Guest'}</div>
-      ${bill.customerAddress ? `<div style="color:#334155;">${bill.customerAddress}</div>` : ''}
-      <div style="color:#334155;">${bill.customerPhone || ''}</div>
-      ${bill.customerEmail ? `<div style="color:#334155;">${bill.customerEmail}</div>` : ''}
-      
-      <div style="margin-top:8px;">
-        <span class="label">TOUR PACKAGE:</span>
-        <strong style="color:#1e1b4b;margin-left:4px;">${bill.packageName || 'N/A'}</strong>
-        <div style="font-size:10.5px;color:#475569;margin-top:1px;">
-          Travel: ${bill.travelDate || 'Flexible'} &nbsp;|&nbsp; Pax: ${bill.travellers || 1} Head(s)
+        <div style="margin-top: 8px;">
+          <p style="font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 700; margin: 0 0 4px 0;">Tour Package:</p>
+          <p style="font-weight: 700; color: #0f172a; margin: 0;">${bill.packageName || 'N/A'}</p>
+          <p style="font-size: 12px; color: #334155; margin: 2px 0 0 0;">Travel Date: ${bill.travelDate || 'Flexible'} | Pax: ${bill.travellers || 1}</p>
+        </div>
+      </div>
+      <div style="width: 33.333%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; background: #f8fafc; height: fit-content; box-sizing: border-box;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px solid #e2e8f0;">
+          <span style="font-size: 12px; font-weight: 700; color: #64748b;">Invoice No:</span>
+          <span style="font-size: 12px; font-weight: 700; color: #312e81;">${bill.billNumber || 'BB-0000'}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="font-size: 12px; font-weight: 700; color: #64748b;">Date:</span>
+          <span style="font-size: 12px; font-weight: 700; color: #0f172a;">${bill.billDate ? new Date(bill.billDate).toLocaleDateString('en-IN') : new Date().toLocaleDateString('en-IN')}</span>
         </div>
       </div>
     </div>
 
-    <div class="bill-meta-box">
-      <div class="meta-row">
-        <span class="label">Invoice No:</span>
-        <span class="val-bold">${bill.billNumber || 'BB-0000'}</span>
-      </div>
-      <div class="meta-row">
-        <span class="label">Date:</span>
-        <span class="val-bold">${bill.billDate ? new Date(bill.billDate).toLocaleDateString('en-IN') : new Date().toLocaleDateString('en-IN')}</span>
-      </div>
-      <div class="meta-row" style="align-items:center;margin-top:6px;">
-        <span class="label">Payment Status:</span>
-        <span class="status-badge" style="color:${statusColor};background:${statusBg};border:1px solid ${statusColor}30;">
-          ${status}
-        </span>
+    <!-- Bill Items Table -->
+    <div style="border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; margin-bottom: 16px;">
+      <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead style="background: #f1f5f9; border-bottom: 1px solid #cbd5e1; color: #334155; font-size: 10px; text-transform: uppercase; font-weight: 700;">
+          <tr>
+            <th style="padding: 6px 12px; border-right: 1px solid #cbd5e1;">Description</th>
+            <th style="padding: 6px 12px; border-right: 1px solid #cbd5e1; text-align: center; width: 80px;">Head</th>
+            <th style="padding: 6px 12px; border-right: 1px solid #cbd5e1; text-align: right; width: 100px;">Rate</th>
+            <th style="padding: 6px 12px; text-align: right; width: 100px;">Amount</th>
+          </tr>
+        </thead>
+        <tbody style="font-size: 12px; color: #0f172a;">
+          ${itemsRows}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pricing Summary -->
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+      <div style="width: 50%;">
+        ${(parseFloat(bill.subtotal) || 0) > 0 ? `
+          <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 14px; font-weight: 600; color: #475569;">
+            <span>Subtotal:</span>
+            <span>₹${(parseFloat(bill.subtotal) || t).toLocaleString('en-IN')}</span>
+          </div>
+        ` : ''}
+        ${(parseFloat(bill.discount) || 0) > 0 ? `
+          <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 14px; font-weight: 600; color: #475569;">
+            <span>Discount:</span>
+            <span>- ₹${(parseFloat(bill.discount) || 0).toLocaleString('en-IN')}</span>
+          </div>
+        ` : ''}
+        ${(parseFloat(bill.tax) || 0) > 0 ? `
+          <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 14px; font-weight: 600; color: #475569;">
+            <span>Tax:</span>
+            <span>+ ₹${(parseFloat(bill.tax) || 0).toLocaleString('en-IN')}</span>
+          </div>
+        ` : ''}
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; margin-top: 8px;">
+          <span style="font-size: 12px; font-weight: 700; color: #475569;">Total Bill:</span>
+          <span style="font-size: 12px; font-weight: 700; color: #0f172a;">₹${t.toLocaleString('en-IN')}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #cbd5e1;">
+          <span style="font-size: 12px; font-weight: 700; color: #059669;">Total Paid:</span>
+          <span style="font-size: 12px; font-weight: 700; color: #059669;">₹${p.toLocaleString('en-IN')}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 4px 8px; border-bottom: 2px solid #1e1b4b; background: #f8fafc; border-radius: 4px; margin-top: 8px;">
+          <span style="font-size: 14px; font-weight: 800; color: #1e1b4b;">Balance Due:</span>
+          <span style="font-size: 14px; font-weight: 800; color: #1e1b4b;">₹${due.toLocaleString('en-IN')}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; margin-top: 8px;">
+          <span style="font-size: 12px; font-weight: 700; color: #475569;">Payment Status:</span>
+          <span style="font-size: 14px; font-weight: 800; color: ${statusColor};">${paymentStatus}</span>
+        </div>
       </div>
     </div>
-  </div>
 
-  <table class="items-table">
-    <thead>
-      <tr>
-        <th style="text-align:left;">Description</th>
-        <th style="text-align:center;width:65px;">Head</th>
-        <th style="text-align:right;width:95px;">Rate</th>
-        <th style="text-align:right;width:105px;">Amount</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${itemsRows}
-    </tbody>
-  </table>
+    <!-- Payment History -->
+    ${paymentsSection}
 
-  <div class="summary-wrap">
-    <div class="summary-box">
-      <div class="summary-row">
-        <span style="color:#475569;">Subtotal:</span>
-        <span style="font-weight:600;color:#0f172a;">₹${(parseFloat(bill.subtotal) || t).toLocaleString('en-IN')}</span>
+    <!-- Footer -->
+    <div style="margin-top: auto; padding-top: 16px; border-top: 1px solid #cbd5e1; display: flex; justify-content: space-between; align-items: flex-end;">
+      <div style="font-size: 12px; color: #64748b; line-height: 1.4;">
+        <p style="font-weight: 700; color: #334155; margin: 0 0 8px 0;">Terms &amp; Conditions:</p>
+        <p style="margin: 0 0 2px 0;">1. All payments are subject to realization.</p>
+        <p style="margin: 0 0 2px 0;">2. Subject to Hooghly Jurisdiction.</p>
+        <p style="margin: 0;">3. This is a computer generated invoice and does not require a physical signature.</p>
       </div>
-      ${(parseFloat(bill.discount) || 0) > 0 ? `
-      <div class="summary-row" style="color:#059669;">
-        <span>Discount:</span>
-        <span>- ₹${(parseFloat(bill.discount) || 0).toLocaleString('en-IN')}</span>
-      </div>` : ''}
-      ${(parseFloat(bill.tax) || 0) > 0 ? `
-      <div class="summary-row" style="color:#334155;">
-        <span>Tax:</span>
-        <span>+ ₹${(parseFloat(bill.tax) || 0).toLocaleString('en-IN')}</span>
-      </div>` : ''}
-      <div class="summary-row summary-total">
-        <span>Total Bill:</span>
-        <span>₹${t.toLocaleString('en-IN')}</span>
+      <div style="text-align: center;">
+        <p style="font-size: 12px; font-weight: 700; color: #0f172a; margin: 0 0 48px 0;">For BANGALIR BERANO</p>
+        <p style="font-size: 12px; font-weight: 600; color: #64748b; border-top: 1px solid #cbd5e1; padding-top: 4px; margin: 0;">Authorized Signatory</p>
       </div>
-      <div class="summary-row" style="color:#059669;font-weight:700;">
-        <span>Total Paid:</span>
-        <span>₹${p.toLocaleString('en-IN')}</span>
-      </div>
-      <div class="due-box">
-        <span>Balance Due:</span>
-        <span>₹${due.toLocaleString('en-IN')}</span>
-      </div>
-    </div>
-  </div>
-
-  ${paymentsSection}
-
-  <div class="footer-box">
-    <div style="line-height:1.45;">
-      <strong style="color:#334155;">Terms &amp; Conditions:</strong><br>
-      1. All payments are subject to realization.<br>
-      2. Subject to Hooghly Jurisdiction.<br>
-      3. This is a computer generated invoice and does not require a physical signature.
-    </div>
-    <div style="text-align:center;min-width:140px;">
-      <strong style="color:#1e1b4b;">For BANGALIR BERANO</strong><br><br><br>
-      <div style="border-top:1px solid #94a3b8;padding-top:3px;font-size:9.5px;font-weight:600;color:#475569;">Authorized Signatory</div>
     </div>
   </div>
 </body>
@@ -383,7 +272,7 @@ function buildInvoiceHTML(bill) {
 }
 
 /**
- * Generates an invoice PDF using PDFKit as a 100% reliable fallback.
+ * Generates an invoice PDF using PDFKit that is a 100% exact reproduction of BillPrintPage.jsx
  */
 function generateWithPDFKit(bill) {
   return new Promise((resolve, reject) => {
@@ -397,127 +286,232 @@ function generateWithPDFKit(bill) {
       const t = parseFloat(bill.totalAmount) || 0;
       const p = parseFloat(bill.advancePaid) || 0;
       const due = parseFloat(bill.dueAmount) !== undefined ? parseFloat(bill.dueAmount) : (t - p);
-      const status = bill.paymentStatus || (p === 0 ? 'PENDING' : (p >= t && t > 0 ? 'PAID' : 'PARTIALLY PAID'));
+      const paymentStatus = bill.paymentStatus || (p === 0 ? 'PENDING' : (p >= t && t > 0 ? 'PAID' : 'PARTIALLY PAID'));
+      const statusColor = paymentStatus === 'PAID' ? '#059669' : (paymentStatus === 'PENDING' ? '#64748b' : '#ea580c');
 
-      // Header
+      // ── Header ──
       if (fs.existsSync(logoPath)) {
         try {
-          doc.image(logoPath, 36, 36, { width: 34, height: 34 });
-          doc.fillColor('#1e1b4b').fontSize(15).text('BANGALIR BERANO', 78, 36, { characterSpacing: 1 });
-          doc.fillColor('#334155').fontSize(9).text('Tours and Travels Operator', 78, 52);
-          doc.fillColor('#64748b').fontSize(7.5).text('42, B G G Sarani, Radha Neel Nibas-II, Bhadrakali, Hooghly, WB - 712232', 78, 64);
-        } catch (e) {
-          doc.fillColor('#1e1b4b').fontSize(16).text('BANGALIR BERANO', 36, 36, { characterSpacing: 1 });
-          doc.fillColor('#334155').fontSize(9.5).text('Tours and Travels Operator', 36, 54);
-          doc.fillColor('#64748b').fontSize(8).text('42, B G G Sarani, Radha Neel Nibas-II, Bhadrakali, Hooghly, WB - 712232', 36, 67);
-        }
-      } else {
-        doc.fillColor('#1e1b4b').fontSize(16).text('BANGALIR BERANO', 36, 36, { characterSpacing: 1 });
-        doc.fillColor('#334155').fontSize(9.5).text('Tours and Travels Operator', 36, 54);
-        doc.fillColor('#64748b').fontSize(8).text('42, B G G Sarani, Radha Neel Nibas-II, Bhadrakali, Hooghly, WB - 712232', 36, 67);
+          doc.save();
+          doc.circle(52, 52, 16).clip();
+          doc.image(logoPath, 36, 36, { width: 32, height: 32 });
+          doc.restore();
+        } catch (e) {}
       }
 
-      doc.fillColor('#475569').fontSize(7.5);
-      doc.text('MSME: UDYAM-WB-07-0135043', 360, 36, { align: 'right', width: 199 });
-      doc.text('Trade License: 0917P1800240190', 360, 48, { align: 'right', width: 199 });
-      doc.text('Phone: +91 9830053647', 360, 60, { align: 'right', width: 199 });
-      doc.text('Email: contact@bangalirberano.com', 360, 72, { align: 'right', width: 199 });
+      doc.fillColor('#1e1b4b').fontSize(16).font('Helvetica-Bold').text('BANGALIR BERANO', 76, 36, { characterSpacing: 0.5 });
+      doc.fontSize(8).font('Helvetica-Bold').text('TM', 222, 33);
+      doc.fillColor('#334155').fontSize(10).font('Helvetica').text('Tours and Travels Operator', 76, 54);
+      doc.fillColor('#475569').fontSize(8).text('42, B G G Sarani, Radha Neel Nibas-II, Bhadrakali, Uttarpara, Hooghly, WB - 712232.', 76, 67);
+      doc.text('Land Mark : Near Bhadrakali Youth Core Club.', 76, 78);
 
-      doc.moveTo(36, 88).lineTo(559, 88).strokeColor('#1e1b4b').lineWidth(1.5).stroke();
-      doc.y = 96;
+      // Right Side Header
+      doc.fontSize(8).fillColor('#475569');
+      doc.font('Helvetica-Bold').text('MSME: ', 360, 40, { continued: true, width: 199, align: 'right' }).font('Helvetica').text('UDYAM-WB-07-0135043');
+      doc.font('Helvetica-Bold').text('Trade License: ', 360, 52, { continued: true, width: 199, align: 'right' }).font('Helvetica').text('0917P1800240190');
+      doc.font('Helvetica-Bold').text('Phone: ', 360, 64, { continued: true, width: 199, align: 'right' }).font('Helvetica').text('+91 9830033647');
+      doc.font('Helvetica-Bold').text('Email: ', 360, 76, { continued: true, width: 199, align: 'right' }).font('Helvetica').text('contact@bangalirberano.com');
 
-      // Invoice Title
-      doc.fillColor('#1e1b4b').fontSize(13).text('INVOICE', { align: 'center', characterSpacing: 2 });
-      doc.moveDown(0.5);
+      // Top Indigo Divider
+      doc.moveTo(36, 94).lineTo(559, 94).strokeColor('#1e1b4b').lineWidth(1.8).stroke();
 
-      // Meta & Customer Details
-      const colTop = doc.y;
-      doc.fontSize(8.5).fillColor('#64748b').text('BILLED TO:', 36, colTop);
-      doc.fontSize(11).fillColor('#0f172a').text(bill.customerName || 'Guest', 36, colTop + 12);
-      let nextY = colTop + 26;
+      // ── Centered INVOICE Box ──
+      const invBoxX = 250;
+      doc.rect(invBoxX, 104, 95, 18).strokeColor('#1e293b').lineWidth(0.8).stroke();
+      doc.fillColor('#1e293b').fontSize(8.5).font('Helvetica-Bold').text('INVOICE', invBoxX, 109, { width: 95, align: 'center', characterSpacing: 2 });
+
+      // ── Details Grid ──
+      // Left: Bill To & Tour Package
+      doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#64748b').text('BILL TO:', 36, 132);
+      doc.fontSize(9.5).font('Helvetica-Bold').fillColor('#0f172a').text(bill.customerName || 'Guest', 36, 144);
+      let curY = 156;
       if (bill.customerAddress) {
-        doc.fontSize(9).fillColor('#334155').text(bill.customerAddress, 36, nextY);
-        nextY += 12;
+        doc.fontSize(8.5).font('Helvetica').fillColor('#334155').text(bill.customerAddress, 36, curY);
+        curY += 12;
       }
-      doc.fontSize(9).fillColor('#334155').text(bill.customerPhone || '', 36, nextY);
-      nextY += 12;
+      if (bill.customerPhone) {
+        doc.fontSize(8.5).font('Helvetica').fillColor('#334155').text(bill.customerPhone, 36, curY);
+        curY += 12;
+      }
       if (bill.customerEmail) {
-        doc.fontSize(9).fillColor('#334155').text(bill.customerEmail, 36, nextY);
-        nextY += 12;
+        doc.fontSize(8.5).font('Helvetica').fillColor('#334155').text(bill.customerEmail, 36, curY);
+        curY += 12;
       }
-      doc.moveDown(0.3);
-      doc.fontSize(8.5).fillColor('#64748b').text(`Tour Package: ${bill.packageName || 'N/A'}`);
-      doc.text(`Travel Date: ${bill.travelDate || 'Flexible'} | Pax: ${bill.travellers || 1} Head(s)`);
+      curY += 4;
+      doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#64748b').text('TOUR PACKAGE:', 36, curY);
+      curY += 12;
+      doc.fontSize(9.5).font('Helvetica-Bold').fillColor('#0f172a').text(bill.packageName || 'Tour Package', 36, curY);
+      curY += 12;
+      doc.fontSize(8.5).font('Helvetica').fillColor('#475569').text(`Travel Date: ${bill.travelDate || 'Flexible'} | Pax: ${bill.travellers || 1}`, 36, curY);
 
-      // Right Meta Box
-      doc.fontSize(9).fillColor('#64748b').text('Invoice No:', 360, colTop);
-      doc.fillColor('#1e1b4b').text(bill.billNumber || 'BB-0000', 430, colTop, { align: 'right', width: 120 });
-      doc.fillColor('#64748b').text('Date:', 360, colTop + 14);
-      doc.fillColor('#1e1b4b').text(bill.billDate ? new Date(bill.billDate).toLocaleDateString('en-IN') : new Date().toLocaleDateString('en-IN'), 430, colTop + 14, { align: 'right', width: 120 });
-      doc.fillColor('#64748b').text('Status:', 360, colTop + 28);
-      doc.fillColor(status === 'PAID' ? '#059669' : '#ea580c').text(status, 430, colTop + 28, { align: 'right', width: 120 });
+      // Right: Invoice No & Date Box
+      doc.roundedRect(380, 132, 179, 44, 6).fillAndStroke('#f8fafc', '#cbd5e1');
+      doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#64748b').text('Invoice No:', 390, 140);
+      doc.fillColor('#312e81').text(bill.billNumber || 'BB-0000', 440, 140, { align: 'right', width: 110 });
+      doc.moveTo(390, 154).lineTo(549, 154).strokeColor('#e2e8f0').lineWidth(0.8).stroke();
+      doc.fillColor('#64748b').text('Date:', 390, 160);
+      doc.fillColor('#0f172a').text(bill.billDate ? new Date(bill.billDate).toLocaleDateString('en-IN') : new Date().toLocaleDateString('en-IN'), 440, 160, { align: 'right', width: 110 });
 
-      doc.y = Math.max(doc.y, nextY + 20);
-      doc.moveDown(1);
-
-      // Items Table Header
-      const tableTop = doc.y;
-      doc.rect(36, tableTop, 523, 18).fill('#f1f5f9');
-      doc.fillColor('#475569').fontSize(8.5);
-      doc.text('Description', 44, tableTop + 5, { width: 260 });
-      doc.text('Head', 310, tableTop + 5, { width: 50, align: 'center' });
-      doc.text('Rate', 370, tableTop + 5, { width: 80, align: 'right' });
-      doc.text('Amount', 460, tableTop + 5, { width: 90, align: 'right' });
-
-      let currentY = tableTop + 20;
+      // ── Items Table ──
+      const tableTop = Math.max(curY + 20, 205);
       const items = Array.isArray(bill.items) && bill.items.length > 0
         ? bill.items
         : [{ description: bill.packageName || 'Tour Package', quantity: bill.travellers || 1, rate: t, amount: t }];
 
-      items.forEach(it => {
-        doc.fillColor('#0f172a').fontSize(9);
-        doc.text(it.description || 'Service', 44, currentY, { width: 260 });
-        doc.fillColor('#334155').text(String(it.quantity !== undefined ? it.quantity : 1), 310, currentY, { width: 50, align: 'center' });
-        doc.text(`INR ${(parseFloat(it.rate) || 0).toLocaleString('en-IN')}`, 370, currentY, { width: 80, align: 'right' });
-        doc.fillColor('#0f172a').text(`INR ${(parseFloat(it.amount) || 0).toLocaleString('en-IN')}`, 460, currentY, { width: 90, align: 'right' });
-        currentY += 18;
+      const rowHeight = 20;
+      const tableHeight = 20 + items.length * rowHeight;
+
+      // Outer rounded border
+      doc.roundedRect(36, tableTop, 523, tableHeight, 6).strokeColor('#cbd5e1').lineWidth(0.8).stroke();
+      // Header fill
+      doc.rect(36.5, tableTop + 0.5, 522, 19).fill('#f1f5f9');
+
+      // Column vertical lines in header
+      doc.moveTo(320, tableTop).lineTo(320, tableTop + tableHeight).strokeColor('#cbd5e1').lineWidth(0.8).stroke();
+      doc.moveTo(380, tableTop).lineTo(380, tableTop + tableHeight).strokeColor('#cbd5e1').lineWidth(0.8).stroke();
+      doc.moveTo(465, tableTop).lineTo(465, tableTop + tableHeight).strokeColor('#cbd5e1').lineWidth(0.8).stroke();
+      // Header bottom border
+      doc.moveTo(36, tableTop + 20).lineTo(559, tableTop + 20).strokeColor('#cbd5e1').lineWidth(0.8).stroke();
+
+      // Header labels
+      doc.fontSize(8).font('Helvetica-Bold').fillColor('#334155');
+      doc.text('DESCRIPTION', 44, tableTop + 6, { width: 270 });
+      doc.text('HEAD', 320, tableTop + 6, { width: 60, align: 'center' });
+      doc.text('RATE', 380, tableTop + 6, { width: 80, align: 'right' });
+      doc.text('AMOUNT', 465, tableTop + 6, { width: 85, align: 'right' });
+
+      // Rows
+      let rY = tableTop + 20;
+      items.forEach((it, idx) => {
+        doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#0f172a');
+        doc.text(it.description || 'Tour Package', 44, rY + 6, { width: 270 });
+
+        doc.font('Helvetica').fillColor('#334155');
+        doc.text(String(it.quantity !== undefined ? it.quantity : 1), 320, rY + 6, { width: 60, align: 'center' });
+
+        // Rate
+        const rateStr = (parseFloat(it.rate) || 0).toLocaleString('en-IN');
+        const rateWidth = doc.widthOfString(rateStr);
+        drawRupee(doc, 460 - rateWidth - 10, rY + 6, 8, '#334155');
+        doc.text(rateStr, 380, rY + 6, { width: 80, align: 'right' });
+
+        // Amount
+        const amtStr = (parseFloat(it.amount) || 0).toLocaleString('en-IN');
+        const amtWidth = doc.widthOfString(amtStr);
+        drawRupee(doc, 550 - amtWidth - 10, rY + 6, 8, '#0f172a');
+        doc.font('Helvetica-Bold').fillColor('#0f172a');
+        doc.text(amtStr, 465, rY + 6, { width: 85, align: 'right' });
+
+        rY += rowHeight;
+        if (idx < items.length - 1) {
+          doc.moveTo(36, rY).lineTo(559, rY).strokeColor('#e2e8f0').lineWidth(0.5).stroke();
+        }
       });
 
-      doc.moveTo(36, currentY).lineTo(559, currentY).strokeColor('#cbd5e1').lineWidth(0.8).stroke();
-      currentY += 8;
+      // ── Pricing Summary (Right Aligned) ──
+      let sY = tableTop + tableHeight + 12;
+      const sBoxX = 350;
+      const sBoxW = 209;
 
-      // Summary
-      doc.fontSize(9).fillColor('#475569');
-      doc.text('Subtotal:', 360, currentY);
-      doc.fillColor('#0f172a').text(`INR ${(parseFloat(bill.subtotal) || t).toLocaleString('en-IN')}`, 450, currentY, { width: 100, align: 'right' });
-      currentY += 14;
-
-      if ((parseFloat(bill.discount) || 0) > 0) {
-        doc.fillColor('#059669').text('Discount:', 360, currentY);
-        doc.text(`- INR ${(parseFloat(bill.discount) || 0).toLocaleString('en-IN')}`, 450, currentY, { width: 100, align: 'right' });
-        currentY += 14;
+      if ((parseFloat(bill.subtotal) || 0) > 0) {
+        doc.fontSize(8.5).font('Helvetica').fillColor('#475569').text('Subtotal:', sBoxX, sY);
+        const subStr = (parseFloat(bill.subtotal) || t).toLocaleString('en-IN');
+        const sw = doc.widthOfString(subStr);
+        drawRupee(doc, sBoxX + sBoxW - sw - 10, sY, 8, '#0f172a');
+        doc.font('Helvetica-Bold').fillColor('#0f172a').text(subStr, sBoxX, sY, { align: 'right', width: sBoxW });
+        sY += 15;
       }
 
-      doc.moveTo(360, currentY).lineTo(559, currentY).strokeColor('#1e1b4b').lineWidth(1).stroke();
-      currentY += 4;
-      doc.fontSize(10).fillColor('#1e1b4b').text('Total Bill:', 360, currentY);
-      doc.text(`INR ${t.toLocaleString('en-IN')}`, 450, currentY, { width: 100, align: 'right' });
-      currentY += 16;
+      if ((parseFloat(bill.discount) || 0) > 0) {
+        doc.fontSize(8.5).font('Helvetica').fillColor('#475569').text('Discount:', sBoxX, sY);
+        const discStr = `- ${(parseFloat(bill.discount) || 0).toLocaleString('en-IN')}`;
+        doc.font('Helvetica-Bold').fillColor('#059669').text(discStr, sBoxX, sY, { align: 'right', width: sBoxW });
+        sY += 15;
+      }
 
-      doc.fontSize(9).fillColor('#059669').text('Total Paid:', 360, currentY);
-      doc.text(`INR ${p.toLocaleString('en-IN')}`, 450, currentY, { width: 100, align: 'right' });
-      currentY += 16;
+      // Total Bill (with top and bottom line)
+      doc.moveTo(sBoxX, sY).lineTo(sBoxX + sBoxW, sY).strokeColor('#cbd5e1').lineWidth(0.8).stroke();
+      sY += 5;
+      doc.fontSize(9).font('Helvetica-Bold').fillColor('#475569').text('Total Bill:', sBoxX, sY);
+      const totStr = t.toLocaleString('en-IN');
+      const totW = doc.widthOfString(totStr);
+      drawRupee(doc, sBoxX + sBoxW - totW - 10, sY, 8.5, '#0f172a');
+      doc.font('Helvetica-Bold').fillColor('#0f172a').text(totStr, sBoxX, sY, { align: 'right', width: sBoxW });
+      sY += 16;
+      doc.moveTo(sBoxX, sY).lineTo(sBoxX + sBoxW, sY).strokeColor('#cbd5e1').lineWidth(0.8).stroke();
+      sY += 6;
 
-      doc.rect(360, currentY, 199, 20).fill('#fef3c7');
-      doc.fontSize(9.5).fillColor('#92400e').text('Balance Due:', 368, currentY + 5);
-      doc.text(`INR ${due.toLocaleString('en-IN')}`, 450, currentY + 5, { width: 100, align: 'right' });
+      // Total Paid
+      doc.fontSize(9).font('Helvetica-Bold').fillColor('#059669').text('Total Paid:', sBoxX, sY);
+      const paidStr = p.toLocaleString('en-IN');
+      const paidW = doc.widthOfString(paidStr);
+      drawRupee(doc, sBoxX + sBoxW - paidW - 10, sY, 8.5, '#059669');
+      doc.text(paidStr, sBoxX, sY, { align: 'right', width: sBoxW });
+      sY += 16;
+      doc.moveTo(sBoxX, sY).lineTo(sBoxX + sBoxW, sY).strokeColor('#cbd5e1').lineWidth(0.8).stroke();
+      sY += 6;
 
-      // Footer
-      const footerY = 750;
+      // Balance Due Box (#f8fafc with #1e1b4b bottom border)
+      doc.roundedRect(sBoxX, sY, sBoxW, 22, 4).fillAndStroke('#f8fafc', '#f1f5f9');
+      doc.moveTo(sBoxX, sY + 22).lineTo(sBoxX + sBoxW, sY + 22).strokeColor('#1e1b4b').lineWidth(2).stroke();
+      doc.fontSize(9.5).font('Helvetica-Bold').fillColor('#1e1b4b').text('Balance Due:', sBoxX + 6, sY + 6);
+      const dueStr = due.toLocaleString('en-IN');
+      const dueW = doc.widthOfString(dueStr);
+      drawRupee(doc, sBoxX + sBoxW - dueW - 16, sY + 6, 9, '#1e1b4b');
+      doc.text(dueStr, sBoxX, sY + 6, { align: 'right', width: sBoxW - 6 });
+      sY += 28;
+
+      // Payment Status
+      doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#475569').text('Payment Status:', sBoxX, sY);
+      doc.fontSize(9.5).font('Helvetica-Bold').fillColor(statusColor).text(paymentStatus, sBoxX, sY, { align: 'right', width: sBoxW });
+      sY += 24;
+
+      // ── Payment History ──
+      const payments = Array.isArray(bill.payments) ? bill.payments : [];
+      let nextSectionY = Math.max(sY, tableTop + tableHeight + 110);
+
+      if (payments.length > 0) {
+        doc.fontSize(8).font('Helvetica-Bold').fillColor('#64748b').text('PAYMENT HISTORY', 36, nextSectionY);
+        doc.moveTo(36, nextSectionY + 12).lineTo(559, nextSectionY + 12).strokeColor('#cbd5e1').lineWidth(0.8).stroke();
+        nextSectionY += 16;
+
+        // Table Header
+        doc.fontSize(7.5).font('Helvetica-Bold').fillColor('#64748b');
+        doc.text('Date', 36, nextSectionY, { width: 70 });
+        doc.text('Method', 110, nextSectionY, { width: 70 });
+        doc.text('Payment Details / Reference', 185, nextSectionY, { width: 260 });
+        doc.text('Amount', 450, nextSectionY, { width: 109, align: 'right' });
+        nextSectionY += 12;
+        doc.moveTo(36, nextSectionY).lineTo(559, nextSectionY).strokeColor('#e2e8f0').lineWidth(0.5).stroke();
+        nextSectionY += 6;
+
+        // Rows
+        payments.forEach(pay => {
+          doc.fontSize(8).font('Helvetica').fillColor('#334155');
+          doc.text(pay.date ? new Date(pay.date).toLocaleDateString('en-IN') : '-', 36, nextSectionY, { width: 70 });
+          doc.font('Helvetica-Bold').fillColor('#0f172a').text(pay.method || 'Cash', 110, nextSectionY, { width: 70 });
+          doc.font('Helvetica').fillColor('#475569').text(formatPaymentDetailsText(pay), 185, nextSectionY, { width: 260 });
+
+          const pAmt = (parseFloat(pay.amount) || 0).toLocaleString('en-IN');
+          const pW = doc.widthOfString(pAmt);
+          drawRupee(doc, 559 - pW - 10, nextSectionY, 8, '#059669');
+          doc.font('Helvetica-Bold').fillColor('#059669').text(pAmt, 450, nextSectionY, { width: 109, align: 'right' });
+          nextSectionY += 16;
+        });
+      }
+
+      // ── Footer ──
+      const footerY = 740;
       doc.moveTo(36, footerY).lineTo(559, footerY).strokeColor('#cbd5e1').lineWidth(0.8).stroke();
-      doc.fontSize(8).fillColor('#64748b').text('1. All payments subject to realization.  2. Hooghly Jurisdiction.  3. Computer generated invoice.', 36, footerY + 8);
-      doc.fontSize(8.5).fillColor('#1e1b4b').text('For BANGALIR BERANO', 420, footerY + 8, { align: 'right', width: 130 });
-      doc.fontSize(7.5).fillColor('#64748b').text('Authorized Signatory', 420, footerY + 36, { align: 'right', width: 130 });
+      doc.fontSize(8).font('Helvetica-Bold').fillColor('#334155').text('Terms & Conditions:', 36, footerY + 8);
+      doc.font('Helvetica').fontSize(7.5).fillColor('#64748b');
+      doc.text('1. All payments are subject to realization.', 36, footerY + 19);
+      doc.text('2. Subject to Hooghly Jurisdiction.', 36, footerY + 29);
+      doc.text('3. This is a computer generated invoice and does not require a physical signature.', 36, footerY + 39);
+
+      doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#0f172a').text('For BANGALIR BERANO', 420, footerY + 8, { align: 'right', width: 139 });
+      doc.moveTo(420, footerY + 44).lineTo(559, footerY + 44).strokeColor('#cbd5e1').lineWidth(0.8).stroke();
+      doc.fontSize(7.5).font('Helvetica').fillColor('#64748b').text('Authorized Signatory', 420, footerY + 48, { align: 'right', width: 139 });
 
       doc.end();
     } catch (e) {
@@ -528,17 +522,32 @@ function generateWithPDFKit(bill) {
 
 /**
  * Generates an invoice PDF with 100% guarantee:
- * 1. Primary: Puppeteer with setContent (exact A4 layout, zero network dependencies, fast)
- * 2. Fallback: PDFKit (pure JS in-memory generation that never fails)
+ * 1. Primary: Puppeteer with exact HTML
+ * 2. Fallback: Pure JS PDFKit that reproduces the exact layout and vector fonts
  * @param {Object} bill - The bill object
  * @returns {Promise<Buffer>}
  */
 async function generateBillPDF(bill) {
   const html = buildInvoiceHTML(bill);
 
-  // 1. Try Puppeteer with self-contained HTML (no external HTTP calls)
+  // Check known Linux Chromium binary locations
+  const linuxPaths = [
+    '/usr/bin/chromium-browser',
+    '/usr/bin/chromium',
+    '/usr/bin/google-chrome',
+    '/usr/bin/google-chrome-stable'
+  ];
+  let execPath;
+  for (const lp of linuxPaths) {
+    if (fs.existsSync(lp)) {
+      execPath = lp;
+      break;
+    }
+  }
+
+  // 1. Try Puppeteer with self-contained HTML (zero external HTTP calls)
   try {
-    const browser = await puppeteer.launch({
+    const launchOptions = {
       headless: 'new',
       args: [
         '--no-sandbox',
@@ -548,26 +557,31 @@ async function generateBillPDF(bill) {
         '--no-first-run',
         '--no-zygote'
       ]
-    });
+    };
+    if (execPath) {
+      launchOptions.executablePath = execPath;
+    }
 
+    const browser = await puppeteer.launch(launchOptions);
     try {
       const page = await browser.newPage();
-      await page.setContent(html, { waitUntil: 'load', timeout: 8000 });
+      await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 10000 });
       const pdfBuffer = await page.pdf({
         format: 'A4',
         printBackground: true,
-        margin: { top: '8mm', right: '8mm', bottom: '8mm', left: '8mm' }
+        preferCSSPageSize: true,
+        margin: { top: '0mm', right: '0mm', bottom: '0mm', left: '0mm' }
       });
       return Buffer.from(pdfBuffer);
     } finally {
       await browser.close().catch(() => {});
     }
   } catch (pupErr) {
-    console.warn('Puppeteer setContent PDF generation error, using PDFKit fallback:', pupErr.message);
+    console.warn('Puppeteer setContent PDF generation error, using exact PDFKit fallback:', pupErr.message);
   }
 
-  // 2. Fallback: Pure JS PDFKit (guaranteed to succeed)
-  console.log('Generating invoice PDF using PDFKit fallback...');
+  // 2. Fallback: Pure JS PDFKit (guaranteed to succeed and exactly matching the design)
+  console.log('Generating invoice PDF using exact PDFKit layout...');
   return await generateWithPDFKit(bill);
 }
 
