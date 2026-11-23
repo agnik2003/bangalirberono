@@ -299,18 +299,27 @@ function generateWithPDFKit(bill) {
         } catch (e) {}
       }
 
-      doc.fillColor('#1e1b4b').fontSize(16).font('Helvetica-Bold').text('BANGALIR BERANO', 76, 36, { characterSpacing: 0.5 });
-      doc.fontSize(8).font('Helvetica-Bold').text('TM', 222, 33);
+      doc.fillColor('#1e1b4b').fontSize(16).font('Helvetica-Bold').text('BANGALIR BERANO', 76, 36);
+      const brandW = doc.widthOfString('BANGALIR BERANO');
+      doc.fontSize(8).font('Helvetica-Bold').text('TM', 76 + brandW + 2, 34);
+
       doc.fillColor('#334155').fontSize(10).font('Helvetica').text('Tours and Travels Operator', 76, 54);
-      doc.fillColor('#475569').fontSize(8).text('42, B G G Sarani, Radha Neel Nibas-II, Bhadrakali, Uttarpara, Hooghly, WB - 712232.', 76, 67);
+      doc.fillColor('#475569').fontSize(8.5).text('42, B G G Sarani, Radha Neel Nibas-II, Bhadrakali, Uttarpara, Hooghly, WB - 712232.', 76, 67);
       doc.text('Land Mark : Near Bhadrakali Youth Core Club.', 76, 78);
 
-      // Right Side Header
+      // Right Side Header (Separate X columns to guarantee NO overlapping text)
       doc.fontSize(8).fillColor('#475569');
-      doc.font('Helvetica-Bold').text('MSME: ', 360, 40, { continued: true, width: 199, align: 'right' }).font('Helvetica').text('UDYAM-WB-07-0135043');
-      doc.font('Helvetica-Bold').text('Trade License: ', 360, 52, { continued: true, width: 199, align: 'right' }).font('Helvetica').text('0917P1800240190');
-      doc.font('Helvetica-Bold').text('Phone: ', 360, 64, { continued: true, width: 199, align: 'right' }).font('Helvetica').text('+91 9830033647');
-      doc.font('Helvetica-Bold').text('Email: ', 360, 76, { continued: true, width: 199, align: 'right' }).font('Helvetica').text('contact@bangalirberano.com');
+      doc.font('Helvetica-Bold').text('MSME:', 360, 40);
+      doc.font('Helvetica').text('UDYAM-WB-07-0135043', 430, 40, { align: 'right', width: 129 });
+
+      doc.font('Helvetica-Bold').text('Trade License:', 360, 52);
+      doc.font('Helvetica').text('0917P1800240190', 430, 52, { align: 'right', width: 129 });
+
+      doc.font('Helvetica-Bold').text('Phone:', 360, 64);
+      doc.font('Helvetica').text('+91 9830053647', 430, 64, { align: 'right', width: 129 });
+
+      doc.font('Helvetica-Bold').text('Email:', 360, 76);
+      doc.font('Helvetica').text('contact@bangalirberano.com', 430, 76, { align: 'right', width: 129 });
 
       // Top Indigo Divider
       doc.moveTo(36, 94).lineTo(559, 94).strokeColor('#1e1b4b').lineWidth(1.8).stroke();
@@ -391,16 +400,12 @@ function generateWithPDFKit(bill) {
 
         // Rate
         const rateStr = (parseFloat(it.rate) || 0).toLocaleString('en-IN');
-        const rateWidth = doc.widthOfString(rateStr);
-        drawRupee(doc, 460 - rateWidth - 10, rY + 6, 8, '#334155');
-        doc.text(rateStr, 380, rY + 6, { width: 80, align: 'right' });
+        doc.text('Rs. ' + rateStr, 380, rY + 6, { width: 80, align: 'right' });
 
         // Amount
         const amtStr = (parseFloat(it.amount) || 0).toLocaleString('en-IN');
-        const amtWidth = doc.widthOfString(amtStr);
-        drawRupee(doc, 550 - amtWidth - 10, rY + 6, 8, '#0f172a');
         doc.font('Helvetica-Bold').fillColor('#0f172a');
-        doc.text(amtStr, 465, rY + 6, { width: 85, align: 'right' });
+        doc.text('Rs. ' + amtStr, 465, rY + 6, { width: 85, align: 'right' });
 
         rY += rowHeight;
         if (idx < items.length - 1) {
@@ -416,15 +421,13 @@ function generateWithPDFKit(bill) {
       if ((parseFloat(bill.subtotal) || 0) > 0) {
         doc.fontSize(8.5).font('Helvetica').fillColor('#475569').text('Subtotal:', sBoxX, sY);
         const subStr = (parseFloat(bill.subtotal) || t).toLocaleString('en-IN');
-        const sw = doc.widthOfString(subStr);
-        drawRupee(doc, sBoxX + sBoxW - sw - 10, sY, 8, '#0f172a');
-        doc.font('Helvetica-Bold').fillColor('#0f172a').text(subStr, sBoxX, sY, { align: 'right', width: sBoxW });
+        doc.font('Helvetica-Bold').fillColor('#0f172a').text('Rs. ' + subStr, sBoxX, sY, { align: 'right', width: sBoxW });
         sY += 15;
       }
 
       if ((parseFloat(bill.discount) || 0) > 0) {
         doc.fontSize(8.5).font('Helvetica').fillColor('#475569').text('Discount:', sBoxX, sY);
-        const discStr = `- ${(parseFloat(bill.discount) || 0).toLocaleString('en-IN')}`;
+        const discStr = `- Rs. ${(parseFloat(bill.discount) || 0).toLocaleString('en-IN')}`;
         doc.font('Helvetica-Bold').fillColor('#059669').text(discStr, sBoxX, sY, { align: 'right', width: sBoxW });
         sY += 15;
       }
@@ -434,9 +437,7 @@ function generateWithPDFKit(bill) {
       sY += 5;
       doc.fontSize(9).font('Helvetica-Bold').fillColor('#475569').text('Total Bill:', sBoxX, sY);
       const totStr = t.toLocaleString('en-IN');
-      const totW = doc.widthOfString(totStr);
-      drawRupee(doc, sBoxX + sBoxW - totW - 10, sY, 8.5, '#0f172a');
-      doc.font('Helvetica-Bold').fillColor('#0f172a').text(totStr, sBoxX, sY, { align: 'right', width: sBoxW });
+      doc.font('Helvetica-Bold').fillColor('#0f172a').text('Rs. ' + totStr, sBoxX, sY, { align: 'right', width: sBoxW });
       sY += 16;
       doc.moveTo(sBoxX, sY).lineTo(sBoxX + sBoxW, sY).strokeColor('#cbd5e1').lineWidth(0.8).stroke();
       sY += 6;
@@ -444,9 +445,7 @@ function generateWithPDFKit(bill) {
       // Total Paid
       doc.fontSize(9).font('Helvetica-Bold').fillColor('#059669').text('Total Paid:', sBoxX, sY);
       const paidStr = p.toLocaleString('en-IN');
-      const paidW = doc.widthOfString(paidStr);
-      drawRupee(doc, sBoxX + sBoxW - paidW - 10, sY, 8.5, '#059669');
-      doc.text(paidStr, sBoxX, sY, { align: 'right', width: sBoxW });
+      doc.text('Rs. ' + paidStr, sBoxX, sY, { align: 'right', width: sBoxW });
       sY += 16;
       doc.moveTo(sBoxX, sY).lineTo(sBoxX + sBoxW, sY).strokeColor('#cbd5e1').lineWidth(0.8).stroke();
       sY += 6;
@@ -456,9 +455,7 @@ function generateWithPDFKit(bill) {
       doc.moveTo(sBoxX, sY + 22).lineTo(sBoxX + sBoxW, sY + 22).strokeColor('#1e1b4b').lineWidth(2).stroke();
       doc.fontSize(9.5).font('Helvetica-Bold').fillColor('#1e1b4b').text('Balance Due:', sBoxX + 6, sY + 6);
       const dueStr = due.toLocaleString('en-IN');
-      const dueW = doc.widthOfString(dueStr);
-      drawRupee(doc, sBoxX + sBoxW - dueW - 16, sY + 6, 9, '#1e1b4b');
-      doc.text(dueStr, sBoxX, sY + 6, { align: 'right', width: sBoxW - 6 });
+      doc.text('Rs. ' + dueStr, sBoxX, sY + 6, { align: 'right', width: sBoxW - 6 });
       sY += 28;
 
       // Payment Status
@@ -493,9 +490,7 @@ function generateWithPDFKit(bill) {
           doc.font('Helvetica').fillColor('#475569').text(formatPaymentDetailsText(pay), 185, nextSectionY, { width: 260 });
 
           const pAmt = (parseFloat(pay.amount) || 0).toLocaleString('en-IN');
-          const pW = doc.widthOfString(pAmt);
-          drawRupee(doc, 559 - pW - 10, nextSectionY, 8, '#059669');
-          doc.font('Helvetica-Bold').fillColor('#059669').text(pAmt, 450, nextSectionY, { width: 109, align: 'right' });
+          doc.font('Helvetica-Bold').fillColor('#059669').text('Rs. ' + pAmt, 450, nextSectionY, { width: 109, align: 'right' });
           nextSectionY += 16;
         });
       }
@@ -585,4 +580,4 @@ async function generateBillPDF(bill) {
   return await generateWithPDFKit(bill);
 }
 
-module.exports = { generateBillPDF, buildInvoiceHTML };
+module.exports = { generateBillPDF, buildInvoiceHTML, generateWithPDFKit };
