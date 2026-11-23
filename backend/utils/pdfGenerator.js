@@ -1,5 +1,15 @@
 const puppeteer = require('puppeteer');
 const PDFDocument = require('pdfkit');
+const path = require('path');
+const fs = require('fs');
+
+let logoBase64 = '';
+const logoPath = path.join(__dirname, '../assets/logo.png');
+if (fs.existsSync(logoPath)) {
+  try {
+    logoBase64 = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
+  } catch (e) {}
+}
 
 function formatPaymentDetailsText(p) {
   const parts = [];
@@ -252,7 +262,10 @@ function buildInvoiceHTML(bill) {
 <body>
   <div class="header-box">
     <div>
-      <h1 class="company-name">BANGALIR BERANO<sup style="font-size:9px;margin-left:2px;">TM</sup></h1>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+        ${logoBase64 ? `<img src="${logoBase64}" alt="Logo" style="width:34px;height:34px;border-radius:50%;object-fit:cover;">` : ''}
+        <h1 class="company-name" style="display:inline-flex;align-items:baseline;margin:0;">BANGALIR BERANO<sup style="font-size:9px;margin-left:2px;position:relative;top:-3px;">TM</sup></h1>
+      </div>
       <p class="company-tag">Tours and Travels Operator</p>
       <div class="company-addr">
         42, B G G Sarani, Radha Neel Nibas-II, Bhadrakali, Uttarpara, Hooghly, WB - 712232.<br>
@@ -387,14 +400,31 @@ function generateWithPDFKit(bill) {
       const status = bill.paymentStatus || (p === 0 ? 'PENDING' : (p >= t && t > 0 ? 'PAID' : 'PARTIALLY PAID'));
 
       // Header
-      doc.fillColor('#1e1b4b').fontSize(18).text('BANGALIR BERANO', { characterSpacing: 1 });
-      doc.fillColor('#334155').fontSize(10).text('Tours and Travels Operator');
-      doc.fillColor('#64748b').fontSize(8.5).text('42, B G G Sarani, Radha Neel Nibas-II, Bhadrakali, Hooghly, WB - 712232');
-      doc.text('Phone: +91 9830053647 | Email: contact@bangalirberano.com');
-      doc.moveDown(0.5);
+      if (fs.existsSync(logoPath)) {
+        try {
+          doc.image(logoPath, 36, 36, { width: 34, height: 34 });
+          doc.fillColor('#1e1b4b').fontSize(15).text('BANGALIR BERANO', 78, 36, { characterSpacing: 1 });
+          doc.fillColor('#334155').fontSize(9).text('Tours and Travels Operator', 78, 52);
+          doc.fillColor('#64748b').fontSize(7.5).text('42, B G G Sarani, Radha Neel Nibas-II, Bhadrakali, Hooghly, WB - 712232', 78, 64);
+        } catch (e) {
+          doc.fillColor('#1e1b4b').fontSize(16).text('BANGALIR BERANO', 36, 36, { characterSpacing: 1 });
+          doc.fillColor('#334155').fontSize(9.5).text('Tours and Travels Operator', 36, 54);
+          doc.fillColor('#64748b').fontSize(8).text('42, B G G Sarani, Radha Neel Nibas-II, Bhadrakali, Hooghly, WB - 712232', 36, 67);
+        }
+      } else {
+        doc.fillColor('#1e1b4b').fontSize(16).text('BANGALIR BERANO', 36, 36, { characterSpacing: 1 });
+        doc.fillColor('#334155').fontSize(9.5).text('Tours and Travels Operator', 36, 54);
+        doc.fillColor('#64748b').fontSize(8).text('42, B G G Sarani, Radha Neel Nibas-II, Bhadrakali, Hooghly, WB - 712232', 36, 67);
+      }
 
-      doc.moveTo(36, doc.y).lineTo(559, doc.y).strokeColor('#1e1b4b').lineWidth(1.5).stroke();
-      doc.moveDown(0.8);
+      doc.fillColor('#475569').fontSize(7.5);
+      doc.text('MSME: UDYAM-WB-07-0135043', 360, 36, { align: 'right', width: 199 });
+      doc.text('Trade License: 0917P1800240190', 360, 48, { align: 'right', width: 199 });
+      doc.text('Phone: +91 9830053647', 360, 60, { align: 'right', width: 199 });
+      doc.text('Email: contact@bangalirberano.com', 360, 72, { align: 'right', width: 199 });
+
+      doc.moveTo(36, 88).lineTo(559, 88).strokeColor('#1e1b4b').lineWidth(1.5).stroke();
+      doc.y = 96;
 
       // Invoice Title
       doc.fillColor('#1e1b4b').fontSize(13).text('INVOICE', { align: 'center', characterSpacing: 2 });

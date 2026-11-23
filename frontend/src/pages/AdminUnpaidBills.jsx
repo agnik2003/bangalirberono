@@ -69,7 +69,11 @@ export default function AdminUnpaidBills() {
     const due = parseFloat(bill.dueAmount) || (t - p);
     const status = bill.paymentStatus || (p === 0 ? 'PENDING' : 'PARTIALLY PAID');
 
-    const billLink = `${API}/bills/${bill._id}/pdf`;
+    // Send the direct invoice view URL so the customer sees the exact normal bill
+    const origin = window.location.origin.includes('localhost')
+      ? window.location.origin.replace('localhost', '127.0.0.1.nip.io')
+      : window.location.origin;
+    const billLink = `${origin}/invoice/${bill._id}`;
 
     const msg = `Dear ${bill.customerName},
 
@@ -86,7 +90,7 @@ Paid: ₹${p.toLocaleString('en-IN')}
 Balance Due: ₹${due.toLocaleString('en-IN')}
 Status: *${status}*
 
-📄 View & Download Invoice PDF:
+📄 View Invoice:
 ${billLink}
 
 Please complete your pending payment.

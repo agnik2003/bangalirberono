@@ -20,8 +20,9 @@ export default function BillPrintPage() {
         const data = await res.json();
         if (data.success) {
           setBill(data.data);
-          // Wait slightly for images to load before printing
-          if (typeof window !== 'undefined' && !navigator.userAgent.includes('HeadlessChrome')) {
+          // Only auto-trigger print dialog if on /admin/bill or ?print=true (so WhatsApp /invoice/:id displays cleanly)
+          const shouldAutoPrint = window.location.pathname.startsWith('/admin/bill') || new URLSearchParams(window.location.search).get('print') === 'true';
+          if (shouldAutoPrint && typeof window !== 'undefined' && !navigator.userAgent.includes('HeadlessChrome')) {
             setTimeout(() => window.print(), 500);
           }
         } else {
