@@ -303,23 +303,15 @@ function generateWithPDFKit(bill) {
       const brandW = doc.widthOfString('BANGALIR BERANO');
       doc.fontSize(8).font('Helvetica-Bold').text('TM', 76 + brandW + 2, 34);
 
-      doc.fillColor('#334155').fontSize(10).font('Helvetica').text('Tours and Travels Operator', 76, 54);
-      doc.fillColor('#475569').fontSize(8.5).text('42, B G G Sarani, Radha Neel Nibas-II, Bhadrakali, Uttarpara, Hooghly, WB - 712232.', 76, 67);
-      doc.text('Land Mark : Near Bhadrakali Youth Core Club.', 76, 78);
+      doc.fillColor('#334155').fontSize(9.5).font('Helvetica').text('Tours and Travels Operator', 76, 52);
+      doc.fillColor('#475569').fontSize(7.5).text('42, B G G Sarani, Radha Neel Nibas-II, Bhadrakali, Uttarpara, Hooghly, WB - 712232.\nLand Mark : Near Bhadrakali Youth Core Club.', 76, 65, { width: 260, lineGap: 2 });
 
-      // Right Side Header (Separate X columns to guarantee NO overlapping text)
-      doc.fontSize(8).fillColor('#475569');
-      doc.font('Helvetica-Bold').text('MSME:', 360, 40);
-      doc.font('Helvetica').text('UDYAM-WB-07-0135043', 430, 40, { align: 'right', width: 129 });
-
-      doc.font('Helvetica-Bold').text('Trade License:', 360, 52);
-      doc.font('Helvetica').text('0917P1800240190', 430, 52, { align: 'right', width: 129 });
-
-      doc.font('Helvetica-Bold').text('Phone:', 360, 64);
-      doc.font('Helvetica').text('+91 9830053647', 430, 64, { align: 'right', width: 129 });
-
-      doc.font('Helvetica-Bold').text('Email:', 360, 76);
-      doc.font('Helvetica').text('contact@bangalirberano.com', 430, 76, { align: 'right', width: 129 });
+      // Right Side Header (Right aligned block from x=380 to 559 - completely separated from address)
+      doc.fontSize(8).fillColor('#475569').font('Helvetica');
+      doc.text('MSME: UDYAM-WB-07-0135043', 380, 40, { width: 179, align: 'right' });
+      doc.text('Trade License: 0917P1800240190', 380, 52, { width: 179, align: 'right' });
+      doc.text('Phone: +91 9830053647', 380, 64, { width: 179, align: 'right' });
+      doc.text('Email: contact@bangalirberano.com', 380, 76, { width: 179, align: 'right' });
 
       // Top Indigo Divider
       doc.moveTo(36, 94).lineTo(559, 94).strokeColor('#1e1b4b').lineWidth(1.8).stroke();
