@@ -53,7 +53,7 @@ export default function AdminLogin() {
           <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-[#c9a96e]/15 to-[#e07b39]/10 border border-[#c9a96e]/20 mb-4 sm:mb-6">
             <Lock size={26} className="text-[#c9a96e]" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-display font-bold text-white mb-1.5 sm:mb-2">Admin Portal</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1.5 sm:mb-2">Admin Portal</h1>
           <p className="text-[#a09a8e] text-xs sm:text-sm">Sign in to manage Bangalir Berano</p>
         </div>
 

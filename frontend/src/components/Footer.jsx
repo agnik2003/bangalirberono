@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Phone, MapPin, ArrowRight } from 'lucide-react';
+import { Phone, Mail, MapPin, ArrowRight } from 'lucide-react';
 import { BRAND, NAV_LINKS } from '../data/constants';
 
 const YoutubeIcon = ({ size = 15 }) => (
@@ -27,6 +27,7 @@ const FOOTER_LINKS = {
     },
     { label: 'YouTube', href: BRAND.youtube, external: true, icon: YoutubeIcon },
     { label: 'Facebook', href: BRAND.facebook, external: true, icon: FacebookIcon },
+    { label: 'Email', href: `mailto:${BRAND.email}`, external: true, icon: Mail },
   ],
 };
 
@@ -72,13 +73,22 @@ export default function Footer() {
             <p className="text-[13px] text-[#6b6560] leading-relaxed max-w-[220px] mb-5">
               Comfortable, well-planned holidays for Bengali travellers and families. Based in West Bengal, exploring India together.
             </p>
-            <a
-              href={BRAND.phoneTel}
-              className="inline-flex items-center gap-2 text-[13px] font-semibold text-[#c9a96e] hover:text-[#e07b39] transition-colors"
-              aria-label={`Call us at ${BRAND.phone}`}
-            >
-              <Phone size={14} /> {BRAND.phone}
-            </a>
+            <div className="flex flex-col gap-2 mb-5">
+              <a
+                href={BRAND.phoneTel}
+                className="inline-flex items-center gap-2 text-[13px] font-semibold text-[#c9a96e] hover:text-[#e07b39] transition-colors"
+                aria-label={`Call us at ${BRAND.phone}`}
+              >
+                <Phone size={14} /> {BRAND.phone}
+              </a>
+              <a
+                href={`mailto:${BRAND.email}`}
+                className="inline-flex items-center gap-2 text-[13px] font-semibold text-[#a09a8e] hover:text-[#c9a96e] transition-colors"
+                aria-label={`Email us at ${BRAND.email}`}
+              >
+                <Mail size={14} /> {BRAND.email}
+              </a>
+            </div>
           </div>
 
           {/* Explore column */}

@@ -63,8 +63,15 @@ exports.createCustomer = async (req, res) => {
 
 exports.updateCustomer = async (req, res) => {
   try {
-    const customer = await Customer.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const { details, ...otherFields } = req.body;
+    const customer = await Customer.findById(req.params.id);
     if (!customer) return res.status(404).json({ success: false, error: 'Not found' });
+
+    Object.assign(customer, otherFields);
+    if (details && details.trim()) {
+      customer.interactions.push({ type: 'Manual', details: details.trim() });
+    }
+    await customer.save();
     res.json({ success: true, data: customer });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Server error' });

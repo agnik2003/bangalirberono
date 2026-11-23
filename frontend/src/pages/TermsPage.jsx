@@ -172,21 +172,21 @@ export default function TermsPage() {
             <div>
               <h3 className="text-lg font-bold text-white mb-1">Have questions regarding our terms?</h3>
               <p className="text-sm text-[#a09a8e]">
-                Contact our customer support team for any clarifications before confirming your booking.
+                Contact our customer support team at <a href={`mailto:${BRAND.email}`} className="text-[#c9a96e] hover:underline font-semibold">{BRAND.email}</a> or call {BRAND.phone} for any clarifications.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
+              <a
+                href={`mailto:${BRAND.email}`}
+                className="btn-primary text-xs sm:text-sm py-2.5 px-5 flex items-center gap-1.5"
+              >
+                <Mail size={14} /> Email Us
+              </a>
               <Link
                 to="/contact"
-                className="btn-primary text-xs sm:text-sm py-2.5 px-5"
-              >
-                Contact Support <ChevronRight size={14} />
-              </Link>
-              <Link
-                to="/refund-policy"
                 className="btn-secondary text-xs sm:text-sm py-2.5 px-5"
               >
-                Refund Policy
+                Contact Support <ChevronRight size={14} />
               </Link>
             </div>
           </div>

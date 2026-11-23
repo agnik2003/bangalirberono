@@ -7,20 +7,20 @@ import { X, Loader2, AlertCircle } from 'lucide-react';
 const inp = "w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 placeholder-slate-400 transition-all";
 const Label = ({ children }) => <label className="block text-xs font-bold text-slate-900 mb-1.5 ml-1 uppercase tracking-wider">{children}</label>;
 
-export default function BookingModal({ packages = [], onClose, onSaved }) {
+export default function BookingModal({ booking = null, packages = [], onClose, onSaved }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const [form, setForm] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    destination: '',
-    date: '',
-    travellers: '',
-    location: '',
-    preferredTravel: 'Train',
-    message: ''
+    name: booking?.name || '',
+    phone: booking?.phone || '',
+    email: booking?.email || '',
+    destination: booking?.destination || '',
+    date: booking?.date || '',
+    travellers: booking?.travellers || '',
+    location: booking?.location || '',
+    preferredTravel: booking?.preferredTravel || 'Train',
+    message: booking?.message || ''
   });
 
   const handleChange = (e) => {
@@ -43,8 +43,11 @@ export default function BookingModal({ packages = [], onClose, onSaved }) {
     
     setLoading(true); setError('');
     try {
-      const res = await fetch(`${API}/bookings`, {
-        method: 'POST',
+      const url = booking ? `${API}/bookings/${booking._id}` : `${API}/bookings`;
+      const method = booking ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
       });
@@ -67,8 +70,8 @@ export default function BookingModal({ packages = [], onClose, onSaved }) {
       <div className="bg-white border border-slate-200 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50">
           <div>
-            <h2 className="text-lg font-bold text-slate-900">Add New Booking</h2>
-            <p className="text-xs text-slate-500 mt-0.5">Manually add a customer booking</p>
+            <h2 className="text-lg font-bold text-slate-900">{booking ? 'Edit Booking' : 'Add New Booking'}</h2>
+            <p className="text-xs text-slate-500 mt-0.5">{booking ? `Update booking details for ${booking.name}` : 'Manually add a customer booking'}</p>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-700 transition-colors">
             <X size={20} />
@@ -143,7 +146,7 @@ export default function BookingModal({ packages = [], onClose, onSaved }) {
             </button>
             <button type="submit" disabled={loading} className="flex-1 py-3.5 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-colors flex justify-center items-center gap-2">
               {loading ? <Loader2 size={18} className="animate-spin" /> : null}
-              Save Booking
+              {booking ? 'Update Booking' : 'Save Booking'}
             </button>
           </div>
         </form>

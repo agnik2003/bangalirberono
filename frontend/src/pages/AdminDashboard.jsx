@@ -529,6 +529,27 @@ export default function AdminDashboard() {
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [billingBooking, setBillingBooking] = useState(null);
   const [editingBill, setEditingBill] = useState(null);
+  const [editingBooking, setEditingBooking] = useState(null);
+  const [editingCustomer, setEditingCustomer] = useState(null);
+
+  const handleEditCustomer = (c) => {
+    setEditingCustomer(c);
+    setNewCustomer({
+      name: c.name || '',
+      phone: c.phone || '',
+      email: c.email || '',
+      age: c.age || '',
+      gender: c.gender || 'M',
+      locationFrom: c.locationFrom || '',
+      heads: c.heads || 1,
+      postpaidNumber: c.postpaidNumber || '',
+      downTrainFlight: c.downTrainFlight || '',
+      room: c.room || '',
+      status: c.status || 'Enquired',
+      details: ''
+    });
+    setShowCustomerModal(true);
+  };
 
   const [showPackageForm, setShowPackageForm] = useState(false);
   const [editingPackage, setEditingPackage] = useState(null);
@@ -613,11 +634,7 @@ export default function AdminDashboard() {
     const due = parseFloat(bill.dueAmount) || (t - p);
     const status = bill.paymentStatus || (p === 0 ? 'PENDING' : (p >= t && t > 0 ? 'PAID' : 'PARTIALLY PAID'));
 
-    // Use the backend API base for the PDF download link
-    // Replace 'localhost' with '127.0.0.1.nip.io' which is a wildcard DNS pointing to localhost.
-    // This tricks WhatsApp into seeing a valid ".io" domain and making it a clickable blue link!
-    const baseUrl = API.replace('localhost', '127.0.0.1.nip.io');
-    const billLink = `${baseUrl}/bills/${bill._id}/pdf?clientUrl=${encodeURIComponent(window.location.origin)}`;
+    const billLink = `${API}/bills/${bill._id}/pdf`;
 
     const msg = `Dear ${bill.customerName},
 
@@ -635,7 +652,8 @@ Paid: ₹${p.toLocaleString('en-IN')}
 Balance Due: ₹${due.toLocaleString('en-IN')}
 Status: *${status}*
 
-View Invoice: ${billLink}
+📄 View & Download Invoice PDF:
+${billLink}
 
 For queries:
 +91 9830053647
@@ -1013,7 +1031,13 @@ Thank you for choosing Bangalir Berano!`;
   const handleApproveEnquiry = async (id) => {
     if (!window.confirm('Approve this enquiry and move to Bookings?')) return;
     const res = await authFetch(`${API}/enquiries/${id}/approve`, { method: 'POST' });
-    if (res.ok) { fetchEnquiries(); fetchBookings(); }
+    if (res.ok) {
+      fetchEnquiries();
+      fetchBookings();
+      setActiveTab('bookings');
+      setToastMessage('Enquiry moved to Bookings successfully!');
+      setTimeout(() => setToastMessage(null), 3500);
+    }
   };
   const handleDeleteEnquiry = async (id) => {
     if (!window.confirm('Delete this enquiry?')) return;
@@ -1144,6 +1168,7 @@ Thank you for choosing Bangalir Berano!`;
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'enquiries', label: 'Enquiries', icon: Users, count: enquiries.length },
     { id: 'bookings', label: 'Bookings', icon: Users, count: bookings.length },
+    { id: 'add-booking', label: 'Add Booking', icon: Plus, isAction: true },
     { id: 'bills', label: 'Billed Customers', icon: FileText, count: bills.length },
     { id: 'customers-ext', label: 'All Customers', icon: Users, count: customers.length },
     { id: 'packages', label: 'Packages', icon: ImageIcon, count: packages.length },
@@ -1192,8 +1217,27 @@ Thank you for choosing Bangalir Berano!`;
           <h2 className="text-base font-bold text-indigo-600 tracking-widest uppercase">Admin</h2>
         </div>
         <nav className="flex-1 p-3 space-y-1">
-          {NAV.map(({ id, label, icon: Icon, count }) => {
+          {NAV.map(({ id, label, icon: Icon, count, isAction }) => {
             const hasAlert = id === 'notifications' && count > 0;
+            if (isAction && id === 'add-booking') {
+              return (
+                <div key={id} className="py-1">
+                  <button
+                    onClick={() => {
+                      setActiveTab('bookings');
+                      setShowBookingModal(true);
+                    }}
+                    className="w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl font-bold text-xs bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm transition-all group"
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <Plus size={16} className="text-white group-hover:rotate-90 transition-transform" />
+                      <span>{label}</span>
+                    </span>
+                    <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">New</span>
+                  </button>
+                </div>
+              );
+            }
             return (
               <div key={id}>
                 <button onClick={() => {
@@ -1245,7 +1289,7 @@ Thank you for choosing Bangalir Berano!`;
       {/* ── Main ── */}
       <main className="flex-1 p-6 md:p-10 max-h-screen overflow-y-auto">
         <header className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-display font-bold mb-1">Welcome to {BRAND.name} Admin</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-1">Welcome to {BRAND.name} Admin</h1>
           <p className="text-slate-500 text-sm">Manage your packages, enquiries and bookings.</p>
         </header>
 
@@ -1256,15 +1300,15 @@ Thank you for choosing Bangalir Berano!`;
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm">
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Total Revenue</h3>
-                <p className="text-3xl font-display font-bold text-indigo-900">₹{bills.reduce((s, b) => s + (parseFloat(b.totalAmount) || 0), 0).toLocaleString('en-IN')}</p>
+                <p className="text-3xl font-extrabold text-slate-900 tracking-tight">₹{bills.reduce((s, b) => s + (parseFloat(b.totalAmount) || 0), 0).toLocaleString('en-IN')}</p>
               </div>
               <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm">
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Payments Received</h3>
-                <p className="text-3xl font-display font-bold text-emerald-600">₹{bills.reduce((s, b) => s + (parseFloat(b.advancePaid) || 0), 0).toLocaleString('en-IN')}</p>
+                <p className="text-3xl font-extrabold text-emerald-600 tracking-tight">₹{bills.reduce((s, b) => s + (parseFloat(b.advancePaid) || 0), 0).toLocaleString('en-IN')}</p>
               </div>
               <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm">
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Outstanding Due</h3>
-                <p className="text-3xl font-display font-bold text-orange-600">₹{bills.reduce((s, b) => s + (parseFloat(b.dueAmount) || 0), 0).toLocaleString('en-IN')}</p>
+                <p className="text-3xl font-extrabold text-orange-600 tracking-tight">₹{bills.reduce((s, b) => s + (parseFloat(b.dueAmount) || 0), 0).toLocaleString('en-IN')}</p>
               </div>
             </div>
 
@@ -1296,7 +1340,7 @@ Thank you for choosing Bangalir Berano!`;
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="p-6 rounded-2xl bg-white border border-slate-200">
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Total Enquiries</h3>
-                <p className="text-4xl font-display font-bold">{enquiries.length}</p>
+                <p className="text-4xl font-extrabold text-slate-900">{enquiries.length}</p>
               </div>
             </div>
             <div className="rounded-2xl bg-white border border-slate-200 overflow-hidden">
@@ -1360,9 +1404,9 @@ Thank you for choosing Bangalir Berano!`;
                               </td>
                               <td className="px-6 py-5"><div className="max-w-[140px] truncate text-[12px] text-slate-600" title={eq.message}>{eq.message || '-'}</div></td>
                               <td className="px-6 py-5 text-right">
-                                <div className="flex justify-end gap-2">
-                                  <button onClick={() => handleApproveEnquiry(eq._id)} className="p-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors" title="Approve"><CheckCircle size={17} /></button>
-                                  <button onClick={() => handleDeleteEnquiry(eq._id)} className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="Delete"><XCircle size={17} /></button>
+                                <div className="flex justify-end gap-2 items-center">
+                                  <button onClick={() => handleApproveEnquiry(eq._id)} className="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg font-bold text-xs transition-colors border border-emerald-200 flex items-center gap-1.5" title="Move to Bookings"><CheckCircle size={14} /> Add Booking</button>
+                                  <button onClick={() => handleDeleteEnquiry(eq._id)} className="p-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors border border-red-200" title="Delete"><XCircle size={15} /></button>
                                 </div>
                               </td>
                             </tr>
@@ -1381,7 +1425,7 @@ Thank you for choosing Bangalir Berano!`;
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="p-6 rounded-2xl bg-white border border-slate-200">
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Total Bookings</h3>
-                <p className="text-4xl font-display font-bold">{bookings.length}</p>
+                <p className="text-4xl font-extrabold text-slate-900">{bookings.length}</p>
               </div>
             </div>
             <div className="rounded-2xl bg-white border border-slate-200 overflow-hidden">
@@ -1472,6 +1516,7 @@ Thank you for choosing Bangalir Berano!`;
                                   ) : (
                                     <button onClick={() => { setBillingBooking(bk); setShowBillModal(true); }} className="px-4 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg font-bold text-xs transition-colors border border-emerald-200">Add Bill</button>
                                   )}
+                                  <button onClick={() => setEditingBooking(bk)} className="px-4 py-1.5 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg font-bold text-xs transition-colors border border-amber-200">Edit</button>
                                   <button onClick={() => handleDeleteBooking(bk._id)} className="px-4 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg font-bold text-xs transition-colors border border-red-200">Delete</button>
                                 </div>
                               </td>
@@ -1491,7 +1536,7 @@ Thank you for choosing Bangalir Berano!`;
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="p-6 rounded-2xl bg-white border border-slate-200">
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Total Billed Customers</h3>
-                <p className="text-4xl font-display font-bold">{bills.length}</p>
+                <p className="text-4xl font-extrabold text-slate-900">{bills.length}</p>
               </div>
             </div>
             <div className="rounded-2xl bg-white border border-slate-200 overflow-hidden">
@@ -1589,7 +1634,7 @@ Thank you for choosing Bangalir Berano!`;
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="p-6 rounded-2xl bg-white border border-slate-200">
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Total Customers</h3>
-                <p className="text-4xl font-display font-bold">{customers.length}</p>
+                <p className="text-4xl font-extrabold text-slate-900">{customers.length}</p>
               </div>
             </div>
             <div className="rounded-2xl bg-white border border-slate-200 overflow-hidden">
@@ -1600,7 +1645,11 @@ Thank you for choosing Bangalir Berano!`;
                     <button onClick={exportCustomersToCSV} className="px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-sm shadow-sm hover:bg-emerald-100 transition-colors flex items-center gap-2 border border-emerald-200">
                       <span>📥</span> Export to CSV
                     </button>
-                    <button onClick={() => setShowCustomerModal(true)} className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-sm hover:bg-indigo-700 transition-colors flex items-center gap-2">
+                    <button onClick={() => {
+                      setEditingCustomer(null);
+                      setNewCustomer({ name: '', phone: '', email: '', age: '', gender: 'M', locationFrom: '', heads: 1, postpaidNumber: '', downTrainFlight: '', room: '', status: 'Enquired', details: '' });
+                      setShowCustomerModal(true);
+                    }} className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-sm hover:bg-indigo-700 transition-colors flex items-center gap-2">
                       <Plus size={16} /> Add Customer
                     </button>
                   </div>
@@ -1673,6 +1722,7 @@ Thank you for choosing Bangalir Berano!`;
                                     <div className="flex justify-end gap-1 flex-wrap">
                                       <button onClick={() => { setCustomerContactModal({ type: 'whatsapp', customer: c }); setShareEmail(c.email || ''); setShareMsg(''); setContactMessageType('invite'); setSelectedPackageId(packages[0]?._id || ''); }} className="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg font-bold text-xs transition-colors border border-emerald-200 flex items-center gap-1"><span>📱</span> WhatsApp</button>
                                       <button onClick={() => { setCustomerContactModal({ type: 'email', customer: c }); setShareEmail(c.email || ''); setShareMsg(''); setContactMessageType('invite'); setSelectedPackageId(packages[0]?._id || ''); }} className="px-3 py-1.5 bg-sky-50 text-sky-700 hover:bg-sky-100 rounded-lg font-bold text-xs transition-colors border border-sky-200 flex items-center gap-1"><span>✉️</span> Email</button>
+                                      <button onClick={() => handleEditCustomer(c)} className="px-3 py-1.5 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg font-bold text-xs transition-colors border border-amber-200 flex items-center gap-1"><Pencil size={13} /> Edit</button>
                                       <button onClick={async () => {
                                         if (!window.confirm('Delete this customer?')) return;
                                         const res = await authFetch(`${API}/customers/${c._id}`, { method: 'DELETE' });
@@ -2303,7 +2353,27 @@ Thank you for choosing Bangalir Berano!`;
         <BookingModal
           packages={packages}
           onClose={() => setShowBookingModal(false)}
-          onSaved={() => fetchBookings()}
+          onSaved={() => {
+            fetchBookings();
+            fetchCustomers();
+            setActiveTab('bookings');
+            setToastMessage('Booking added successfully!');
+            setTimeout(() => setToastMessage(null), 3500);
+          }}
+        />
+      )}
+
+      {/* ── Edit Booking Modal ── */}
+      {editingBooking && (
+        <BookingModal
+          booking={editingBooking}
+          packages={packages}
+          onClose={() => setEditingBooking(null)}
+          onSaved={() => {
+            fetchBookings();
+            fetchBills();
+            fetchCustomers();
+          }}
         />
       )}
 
@@ -2312,19 +2382,22 @@ Thank you for choosing Bangalir Berano!`;
         <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md overflow-y-auto">
           <div className="bg-white border border-slate-200 w-full max-w-md rounded-[24px] shadow-2xl p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-slate-900">Add Customer</h2>
+              <h2 className="text-xl font-bold text-slate-900">{editingCustomer ? 'Edit Customer' : 'Add Customer'}</h2>
               <button onClick={() => setShowCustomerModal(false)} className="text-slate-400 hover:text-slate-900"><X size={20} /></button>
             </div>
             <form onSubmit={async (e) => {
               e.preventDefault();
               try {
-                const res = await authFetch(`${API}/customers`, {
-                  method: 'POST',
+                const url = editingCustomer ? `${API}/customers/${editingCustomer._id}` : `${API}/customers`;
+                const method = editingCustomer ? 'PUT' : 'POST';
+                const res = await authFetch(url, {
+                  method,
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(newCustomer)
                 });
                 if (res.ok) {
                   setShowCustomerModal(false);
+                  setEditingCustomer(null);
                   setNewCustomer({ name: '', phone: '', email: '', age: '', gender: 'M', locationFrom: '', heads: 1, postpaidNumber: '', downTrainFlight: '', room: '', status: 'Enquired', details: '' });
                   fetchCustomers();
                 }
@@ -2388,7 +2461,7 @@ Thank you for choosing Bangalir Berano!`;
                 <label className="block text-xs font-bold text-slate-400 mb-1">Interaction Details (Optional)</label>
                 <textarea value={newCustomer.details} onChange={e => setNewCustomer({ ...newCustomer, details: e.target.value })} className={settingInp + " resize-none"} rows={2} placeholder="E.g. Met at office for Darjeeling tour" />
               </div>
-              <button type="submit" className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700">Save Customer</button>
+              <button type="submit" className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700">{editingCustomer ? 'Update Customer' : 'Save Customer'}</button>
             </form>
           </div>
         </div>

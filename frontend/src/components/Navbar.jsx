@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ArrowRight, Phone } from 'lucide-react';
+import { Menu, X, ArrowRight, Phone, Mail } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { NAV_LINKS, BRAND } from '../data/constants';
 import ExperienceModal from './ExperienceModal';
@@ -297,6 +297,13 @@ export default function Navbar() {
                 className="btn-secondary justify-center text-sm py-4"
               >
                 Send Enquiry
+              </a>
+              <a
+                href={`mailto:${BRAND.email}`}
+                className="flex items-center justify-center gap-2 text-xs font-semibold text-[#a09a8e] hover:text-[#c9a96e] transition-colors py-1.5"
+                aria-label={`Email us at ${BRAND.email}`}
+              >
+                <Mail size={13} className="text-[#c9a96e]" /> {BRAND.email}
               </a>
             </div>
           </motion.div>

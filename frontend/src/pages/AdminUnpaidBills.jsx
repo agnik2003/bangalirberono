@@ -69,8 +69,7 @@ export default function AdminUnpaidBills() {
     const due = parseFloat(bill.dueAmount) || (t - p);
     const status = bill.paymentStatus || (p === 0 ? 'PENDING' : 'PARTIALLY PAID');
 
-    const baseUrl = API.replace('localhost', '127.0.0.1.nip.io');
-    const billLink = `${baseUrl}/bills/${bill._id}/pdf?clientUrl=${encodeURIComponent(window.location.origin)}`;
+    const billLink = `${API}/bills/${bill._id}/pdf`;
 
     const msg = `Dear ${bill.customerName},
 
@@ -87,10 +86,13 @@ Paid: ₹${p.toLocaleString('en-IN')}
 Balance Due: ₹${due.toLocaleString('en-IN')}
 Status: *${status}*
 
-View Invoice: ${billLink}
+📄 View & Download Invoice PDF:
+${billLink}
 
 Please complete your pending payment.
-For queries: +91 9830053647
+For queries:
++91 9830053647
+contact@bangalirberano.com
 Thank you!`;
     const url = `https://wa.me/${intlPhone}?text=${encodeURIComponent(msg)}`;
     window.open(url, '_blank');
@@ -136,7 +138,7 @@ Thank you!`;
       <div className="max-w-6xl mx-auto">
         <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-display font-bold mb-1">All Unpaid Bills</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-1">All Unpaid Bills</h1>
             <p className="text-slate-500 text-sm">Customers who have not completed their full payment for all trips.</p>
           </div>
           <div className="flex flex-wrap gap-2 items-center justify-end w-full md:w-auto">

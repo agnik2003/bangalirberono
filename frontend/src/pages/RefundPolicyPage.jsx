@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { RefreshCw, AlertTriangle, Clock, CreditCard, CheckCircle2, ChevronRight, HelpCircle } from 'lucide-react';
+import { RefreshCw, AlertTriangle, Clock, CreditCard, CheckCircle2, ChevronRight, HelpCircle, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { BRAND } from '../data/constants';
 
@@ -172,16 +172,16 @@ export default function RefundPolicyPage() {
                 <HelpCircle size={18} /> Need Help with a Refund or Payment Query?
               </div>
               <p className="text-sm text-[#a09a8e]">
-                Our payment and booking support team is available Mon–Sat from 10:00 AM to 8:00 PM IST.
+                Our payment and booking support team is available via email at <a href={`mailto:${BRAND.email}`} className="text-[#c9a96e] hover:underline font-semibold">{BRAND.email}</a> or WhatsApp at {BRAND.phone}.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Link
-                to="/contact"
-                className="btn-primary text-xs sm:text-sm py-2.5 px-5"
+              <a
+                href={`mailto:${BRAND.email}`}
+                className="btn-primary text-xs sm:text-sm py-2.5 px-5 flex items-center gap-1.5"
               >
-                Payment Support <ChevronRight size={14} />
-              </Link>
+                <Mail size={14} /> Email Support
+              </a>
               <a
                 href={BRAND.whatsapp}
                 target="_blank"

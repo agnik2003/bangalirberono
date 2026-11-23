@@ -1,7 +1,8 @@
 import { API, BRAND } from '../data/constants';
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Printer } from 'lucide-react';
+import { Printer, FileText } from 'lucide-react';
+import { formatPaymentDetailsText } from '../utils/paymentUtils';
 
 
 
@@ -20,7 +21,9 @@ export default function BillPrintPage() {
         if (data.success) {
           setBill(data.data);
           // Wait slightly for images to load before printing
-          setTimeout(() => window.print(), 500);
+          if (typeof window !== 'undefined' && !navigator.userAgent.includes('HeadlessChrome')) {
+            setTimeout(() => window.print(), 500);
+          }
         } else {
           setError(data.message || 'Bill not found');
         }
@@ -52,7 +55,15 @@ export default function BillPrintPage() {
       `}</style>
       
       {/* Floating print button for user */}
-      <div className="fixed bottom-8 right-8 print:hidden z-50">
+      <div className="fixed bottom-8 right-8 print:hidden z-50 flex items-center gap-3">
+        <a
+          href={`${API}/bills/${id}/pdf`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-6 py-3 bg-emerald-600 text-white rounded-full font-bold shadow-xl hover:bg-emerald-700 flex items-center gap-2 transition-all"
+        >
+          <FileText size={18} /> Open / Download PDF
+        </a>
         <button onClick={() => window.print()} className="px-6 py-3 bg-indigo-600 text-white rounded-full font-bold shadow-xl hover:bg-indigo-700 flex items-center gap-2">
           <Printer size={18} /> Print Invoice
         </button>
@@ -116,7 +127,7 @@ export default function BillPrintPage() {
             <thead className="bg-slate-100 border-b border-slate-300 text-slate-700 text-[10px] uppercase font-bold">
               <tr>
                 <th className="px-3 py-1 border-r border-slate-300">Description</th>
-                <th className="px-3 py-1 border-r border-slate-300 text-center w-24">Qty</th>
+                <th className="px-3 py-1 border-r border-slate-300 text-center w-24">Head</th>
                 <th className="px-3 py-1 border-r border-slate-300 text-right w-32">Rate</th>
                 <th className="px-3 py-1 text-right w-32">Amount</th>
               </tr>
@@ -188,15 +199,20 @@ export default function BillPrintPage() {
           <div className="mb-4 print:mb-4">
             <h4 className="text-[10px] font-bold text-slate-500 uppercase mb-1 border-b border-slate-300 pb-1">Payment History</h4>
             <table className="w-full text-left text-xs">
-              <thead className="text-slate-500">
-                <tr><th className="py-1">Date</th><th className="py-1">Method</th><th className="py-1">Txn ID</th><th className="py-1 text-right">Amount</th></tr>
+              <thead className="text-slate-500 border-b border-slate-200">
+                <tr>
+                  <th className="py-1 w-24">Date</th>
+                  <th className="py-1 w-28">Method</th>
+                  <th className="py-1">Payment Details / Reference</th>
+                  <th className="py-1 text-right w-28">Amount</th>
+                </tr>
               </thead>
               <tbody className="text-slate-800 font-semibold divide-y divide-slate-100">
                 {bill.payments.map((p, i) => (
                   <tr key={i}>
-                    <td className="py-1">{new Date(p.date).toLocaleDateString('en-IN')}</td>
-                    <td className="py-1">{p.method}</td>
-                    <td className="py-1">{p.transactionId || '-'}</td>
+                    <td className="py-1 text-slate-700">{new Date(p.date).toLocaleDateString('en-IN')}</td>
+                    <td className="py-1 font-bold text-slate-900">{p.method}</td>
+                    <td className="py-1 text-slate-600 font-normal">{formatPaymentDetailsText(p)}</td>
                     <td className="py-1 text-right font-bold text-emerald-600">₹{p.amount.toLocaleString('en-IN')}</td>
                   </tr>
                 ))}

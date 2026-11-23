@@ -19,6 +19,27 @@ export default function AdminAllCustomers() {
   
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', email: '', age: '', gender: 'M', locationFrom: '', heads: 1, postpaidNumber: '', downTrainFlight: '', room: '', packageName: '', status: 'Enquired', details: '' });
+  const [editingCustomer, setEditingCustomer] = useState(null);
+
+  const handleEditCustomer = (c) => {
+    setEditingCustomer(c);
+    setNewCustomer({
+      name: c.name || '',
+      phone: c.phone || '',
+      email: c.email || '',
+      age: c.age || '',
+      gender: c.gender || 'M',
+      locationFrom: c.locationFrom || '',
+      heads: c.heads || 1,
+      postpaidNumber: c.postpaidNumber || '',
+      downTrainFlight: c.downTrainFlight || '',
+      room: c.room || '',
+      packageName: c.packageName || '',
+      status: c.status || 'Enquired',
+      details: ''
+    });
+    setShowCustomerModal(true);
+  };
   
   const [customerContactModal, setCustomerContactModal] = useState(null); // { type: 'whatsapp'|'email', customer }
   const [sharePhone, setSharePhone] = useState('');
@@ -159,7 +180,7 @@ export default function AdminAllCustomers() {
       <div className="w-full">
         <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-display font-bold mb-1">All Customers</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-1">All Customers</h1>
             <p className="text-slate-500 text-sm">Full view of all customers ({customers.length} total)</p>
           </div>
           <div className="flex flex-wrap gap-2 items-center justify-end w-full md:w-auto">
@@ -186,7 +207,11 @@ export default function AdminAllCustomers() {
             <button onClick={exportCustomersToCSV} className="px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-sm shadow-sm hover:bg-emerald-100 transition-colors flex items-center gap-2 border border-emerald-200">
               <span>📊</span> Export CSV
             </button>
-            <button onClick={() => setShowCustomerModal(true)} className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-sm hover:bg-indigo-700 transition-colors flex items-center gap-2">
+            <button onClick={() => {
+              setEditingCustomer(null);
+              setNewCustomer({ name: '', phone: '', email: '', age: '', gender: 'M', locationFrom: '', heads: 1, postpaidNumber: '', downTrainFlight: '', room: '', packageName: '', status: 'Enquired', details: '' });
+              setShowCustomerModal(true);
+            }} className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-sm hover:bg-indigo-700 transition-colors flex items-center gap-2">
               <Plus size={16} /> Add Customer
             </button>
           </div>
@@ -266,6 +291,7 @@ export default function AdminAllCustomers() {
                         <div className="flex gap-1 justify-end flex-col sm:flex-row">
                           <button onClick={() => { setSharePhone(c.phone); setShareMessage(`Hi ${c.name},\n\nGreetings from Bangalir Berano!`); setCustomerContactModal({ type: 'whatsapp', customer: c }); }} className="px-2 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded text-[10px] font-bold border border-emerald-200">WhatsApp</button>
                           <button onClick={() => { setSharePhone(c.phone); setShareMessage(`Hi ${c.name},\n\nGreetings from Bangalir Berano!`); setCustomerContactModal({ type: 'email', customer: c }); }} className="px-2 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded text-[10px] font-bold border border-blue-200">Email</button>
+                          <button onClick={() => handleEditCustomer(c)} className="px-2 py-1 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded text-[10px] font-bold border border-amber-200">Edit</button>
                           <button onClick={() => handleDeleteCustomer(c._id)} className="px-2 py-1 bg-red-50 text-red-600 hover:bg-red-100 rounded text-[10px] font-bold border border-red-200">Del</button>
                         </div>
                       </td>
@@ -282,19 +308,22 @@ export default function AdminAllCustomers() {
         <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md">
           <div className="bg-white border border-slate-200 w-full max-w-4xl rounded-[24px] shadow-2xl p-6 md:p-8 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-slate-900">Add Customer</h2>
+              <h2 className="text-2xl font-bold text-slate-900">{editingCustomer ? 'Edit Customer' : 'Add Customer'}</h2>
               <button onClick={() => setShowCustomerModal(false)} className="text-slate-400 hover:text-slate-900"><X size={20}/></button>
             </div>
             <form onSubmit={async (e) => {
               e.preventDefault();
               try {
-                const res = await authFetch(`${API}/customers`, {
-                  method: 'POST',
+                const url = editingCustomer ? `${API}/customers/${editingCustomer._id}` : `${API}/customers`;
+                const method = editingCustomer ? 'PUT' : 'POST';
+                const res = await authFetch(url, {
+                  method,
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(newCustomer)
                 });
                 if (res.ok) {
                   setShowCustomerModal(false);
+                  setEditingCustomer(null);
                   setNewCustomer({ name: '', phone: '', email: '', age: '', gender: 'M', locationFrom: '', heads: 1, postpaidNumber: '', downTrainFlight: '', room: '', packageName: '', status: 'Enquired', details: '' });
                   fetchCustomers();
                 }
@@ -365,7 +394,7 @@ export default function AdminAllCustomers() {
                 <label className="block text-xs font-bold text-slate-400 mb-1">Interaction Details (Optional)</label>
                 <textarea value={newCustomer.details} onChange={e=>setNewCustomer({...newCustomer, details: e.target.value})} className={settingInp + " resize-none"} rows={2} placeholder="E.g. Met at office for Darjeeling tour" />
               </div>
-              <button type="submit" className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700">Save Customer</button>
+              <button type="submit" className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700">{editingCustomer ? 'Update Customer' : 'Save Customer'}</button>
             </form>
           </div>
         </div>

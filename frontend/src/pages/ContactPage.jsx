@@ -70,18 +70,19 @@ export default function ContactPage() {
             </a>
           </div>
 
-          {/* Card 3: Payment & Accounts */}
+          {/* Card 3: Email & Helpdesk */}
           <div className="bg-[#141419] border border-white/8 hover:border-[#c9a96e]/30 rounded-2xl p-5 sm:p-6 transition-all flex flex-col justify-between">
             <div>
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#c9a96e]/20 to-[#e07b39]/10 border border-[#c9a96e]/30 flex items-center justify-center text-[#c9a96e] mb-4">
-                <CreditCard size={18} />
+                <Mail size={18} />
               </div>
-              <h3 className="text-base font-bold text-white mb-1">Payment &amp; Billing</h3>
-              <p className="text-xs text-[#a09a8e] mb-3">Bank transfer verification, receipts &amp; refund status</p>
+              <h3 className="text-base font-bold text-white mb-1">Official Email Support</h3>
+              <p className="text-xs text-[#a09a8e] mb-3">Itinerary queries, custom trips &amp; payment receipts</p>
             </div>
             <a
               href={`mailto:${BRAND.email}`}
-              className="text-sm font-bold text-[#c9a96e] hover:text-[#e07b39] transition-colors mt-2 truncate"
+              className="text-sm font-bold text-[#c9a96e] hover:text-[#e07b39] transition-colors mt-2 truncate block"
+              title={`Send email to ${BRAND.email}`}
             >
               {BRAND.email}
             </a>
@@ -116,12 +117,20 @@ export default function ContactPage() {
               </p>
             </div>
           </div>
-          <a
-            href={BRAND.phoneTel}
-            className="btn-secondary text-xs sm:text-sm py-2.5 px-4 shrink-0"
-          >
-            Call Office
-          </a>
+          <div className="flex flex-wrap gap-2.5 shrink-0">
+            <a
+              href={`mailto:${BRAND.email}`}
+              className="btn-secondary text-xs sm:text-sm py-2.5 px-4 flex items-center gap-1.5"
+            >
+              <Mail size={14} /> Email Us
+            </a>
+            <a
+              href={BRAND.phoneTel}
+              className="btn-secondary text-xs sm:text-sm py-2.5 px-4"
+            >
+              Call Office
+            </a>
+          </div>
         </div>
       </div>
 

@@ -285,7 +285,7 @@ export const FAQS = [
   {
     id: 1,
     question: 'How do I book a tour?',
-    answer: 'Simply click "Book Now" or "Book via WhatsApp" on any tour card. You can also call us directly at +91 98300 33647 or WhatsApp us at +91 89181 06326 to reserve your seats.',
+    answer: 'Simply click "Book Now" or "Book via WhatsApp" on any tour card. You can also call us directly at +91 98300 33647, WhatsApp us at +91 89181 06326, or email us at contact@bangalirberano.com to reserve your seats.',
   },
   {
     id: 2,
@@ -299,8 +299,8 @@ export const FAQS = [
   },
   {
     id: 4,
-    question: 'Where is Bangalir Berano located?',
-    answer: BRAND.address,
+    question: 'Where is Bangalir Berano located & how do I contact you?',
+    answer: `${BRAND.address}\n\nEmail: ${BRAND.email}\nPhone: ${BRAND.phone}`,
   },
 ];
 

@@ -1,6 +1,7 @@
 import { API, authFetch } from '../data/constants';
 import { useState, useEffect } from 'react';
-import { X, Loader2, Printer, Plus, Edit2, Trash2, Save, Download } from 'lucide-react';
+import { X, Loader2, Printer, Plus, Edit2, Trash2, Save, Download, FileText } from 'lucide-react';
+import { getPaymentMethodBadgeClass } from '../utils/paymentUtils';
 
 
 
@@ -43,11 +44,25 @@ export default function BillModal({ booking, existingBillId, packages = [], onCl
   ]);
 
   // Payment states
+  const defaultPaymentForm = {
+    amount: '',
+    method: 'UPI',
+    date: new Date().toISOString().split('T')[0],
+    transactionId: '',
+    upiId: '',
+    paymentApp: 'Google Pay',
+    bankName: '',
+    accountNumber: '',
+    transferType: 'IMPS',
+    cardType: 'Credit Card',
+    cardNetwork: 'Visa',
+    cardLast4: '',
+    notes: ''
+  };
+
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [editingPayment, setEditingPayment] = useState(null);
-  const [paymentForm, setPaymentForm] = useState({
-    amount: '', method: 'UPI', date: new Date().toISOString().split('T')[0], transactionId: '', notes: ''
-  });
+  const [paymentForm, setPaymentForm] = useState(defaultPaymentForm);
 
   useEffect(() => {
     if (existingBillId) {
@@ -200,7 +215,7 @@ export default function BillModal({ booking, existingBillId, packages = [], onCl
       if (data.success) {
         setShowPaymentForm(false);
         setEditingPayment(null);
-        setPaymentForm({ amount: '', method: 'UPI', date: new Date().toISOString().split('T')[0], transactionId: '', notes: '' });
+        setPaymentForm(defaultPaymentForm);
         fetchBill();
         if (onSaved) onSaved();
       } else {
@@ -236,20 +251,26 @@ export default function BillModal({ booking, existingBillId, packages = [], onCl
     if (payment) {
       setEditingPayment(payment);
       setPaymentForm({
-        amount: payment.amount,
-        method: payment.method,
-        date: new Date(payment.date).toISOString().split('T')[0],
+        amount: payment.amount ?? '',
+        method: payment.method || 'UPI',
+        date: payment.date ? new Date(payment.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         transactionId: payment.transactionId || '',
+        upiId: payment.upiId || '',
+        paymentApp: payment.paymentApp || 'Google Pay',
+        bankName: payment.bankName || '',
+        accountNumber: payment.accountNumber || '',
+        transferType: payment.transferType || 'IMPS',
+        cardType: payment.cardType || 'Credit Card',
+        cardNetwork: payment.cardNetwork || 'Visa',
+        cardLast4: payment.cardLast4 || '',
         notes: payment.notes || ''
       });
     } else {
       setEditingPayment(null);
       setPaymentForm({
-        amount: bill?.dueAmount || 0,
-        method: 'UPI',
-        date: new Date().toISOString().split('T')[0],
-        transactionId: '',
-        notes: ''
+        ...defaultPaymentForm,
+        amount: bill?.dueAmount > 0 ? bill.dueAmount : '',
+        date: new Date().toISOString().split('T')[0]
       });
     }
     setShowPaymentForm(true);
@@ -299,7 +320,7 @@ export default function BillModal({ booking, existingBillId, packages = [], onCl
                 {items.map((item, index) => (
                   <div key={index} className="flex gap-3 items-start">
                     <div className="flex-1"><Label>Description</Label><input list="item-description-suggestions" value={item.description} onChange={e => handleItemChange(index, 'description', e.target.value)} className={inp} placeholder="e.g. Tour Package, Hotel, Transport..." /></div>
-                    <div className="w-24"><Label>Qty</Label><input type="number" value={item.quantity} onChange={e => handleItemChange(index, 'quantity', e.target.value)} className={inp} /></div>
+                    <div className="w-24"><Label>Head</Label><input type="number" value={item.quantity} onChange={e => handleItemChange(index, 'quantity', e.target.value)} className={inp} /></div>
                     <div className="w-32"><Label>Rate (₹)</Label><input type="number" value={item.rate} onChange={e => handleItemChange(index, 'rate', e.target.value)} className={inp} /></div>
                     <div className="w-32"><Label>Amount (₹)</Label><input type="number" value={item.amount} disabled className={`${inp} bg-slate-100 font-bold`} /></div>
                     {items.length > 1 && (
@@ -386,7 +407,7 @@ export default function BillModal({ booking, existingBillId, packages = [], onCl
             <h3 className="text-sm font-extrabold text-slate-400 uppercase tracking-widest border-b pb-2 mb-4">Bill Items</h3>
             <table className="w-full text-left text-sm">
               <thead className="text-xs font-bold text-slate-400 uppercase bg-slate-50">
-                <tr><th className="px-4 py-3 rounded-l-lg">Description</th><th className="px-4 py-3">Qty</th><th className="px-4 py-3">Rate</th><th className="px-4 py-3 text-right rounded-r-lg">Amount</th></tr>
+                <tr><th className="px-4 py-3 rounded-l-lg">Description</th><th className="px-4 py-3">Head</th><th className="px-4 py-3">Rate</th><th className="px-4 py-3 text-right rounded-r-lg">Amount</th></tr>
               </thead>
               <tbody className="font-semibold text-slate-700 divide-y divide-slate-50">
                 {bill.items?.map((item, i) => (
@@ -437,50 +458,356 @@ export default function BillModal({ booking, existingBillId, packages = [], onCl
             </div>
             
             {showPaymentForm && (
-              <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 mb-6 flex gap-4 items-end">
-                <div className="flex-1"><Label>Amount (₹)</Label><input type="number" value={paymentForm.amount} onChange={e => setPaymentForm({...paymentForm, amount: e.target.value})} className={inp} /></div>
-                <div className="w-40"><Label>Method</Label>
-                  <select value={paymentForm.method} onChange={e => setPaymentForm({...paymentForm, method: e.target.value})} className={inp}>
-                    <option>Cash</option><option>UPI</option><option>Bank Transfer</option><option>Card</option><option>Other</option>
-                  </select>
+              <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 mb-6 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-200/80 pb-3">
+                  <h4 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider">
+                    {editingPayment ? 'Edit Payment' : 'Add New Payment'}
+                  </h4>
+                  <span className="text-xs font-semibold text-slate-500">
+                    Remaining Due: <strong className="text-orange-600">₹{(bill.dueAmount || 0).toLocaleString('en-IN')}</strong>
+                  </span>
                 </div>
-                <div className="w-40"><Label>Date</Label><input type="date" value={paymentForm.date} onChange={e => setPaymentForm({...paymentForm, date: e.target.value})} className={inp} /></div>
-                <div className="flex-1"><Label>Txn ID / Notes</Label><input value={paymentForm.transactionId} onChange={e => setPaymentForm({...paymentForm, transactionId: e.target.value})} className={inp} placeholder="Optional" /></div>
-                <button onClick={savePayment} disabled={loading} className="py-3 px-6 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700">Save</button>
-                <button onClick={() => setShowPaymentForm(false)} className="py-3 px-4 bg-white border border-slate-200 font-bold rounded-xl text-slate-500">Cancel</button>
+
+                {/* Primary Row: Amount, Method, Date */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <Label>Amount (₹) *</Label>
+                    <input
+                      type="number"
+                      value={paymentForm.amount}
+                      onChange={e => setPaymentForm({...paymentForm, amount: e.target.value})}
+                      className={inp}
+                      placeholder="e.g. 5000"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label>Payment Method *</Label>
+                    <select
+                      value={paymentForm.method}
+                      onChange={e => setPaymentForm({...paymentForm, method: e.target.value})}
+                      className={inp}
+                    >
+                      <option value="UPI">UPI</option>
+                      <option value="Cash">Cash</option>
+                      <option value="Bank Transfer">Bank Transfer (NEFT / IMPS / RTGS)</option>
+                      <option value="Card">Card (Credit / Debit)</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label>Payment Date *</Label>
+                    <input
+                      type="date"
+                      value={paymentForm.date}
+                      onChange={e => setPaymentForm({...paymentForm, date: e.target.value})}
+                      className={inp}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Dynamic Fields: UPI */}
+                {paymentForm.method === 'UPI' && (
+                  <div className="p-4 bg-indigo-50/60 rounded-xl border border-indigo-100 space-y-3">
+                    <p className="text-xs font-bold text-indigo-900 uppercase tracking-wider">UPI Details</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <Label>UPI App</Label>
+                        <select
+                          value={paymentForm.paymentApp}
+                          onChange={e => setPaymentForm({...paymentForm, paymentApp: e.target.value})}
+                          className={inp}
+                        >
+                          <option value="Google Pay">Google Pay (GPay)</option>
+                          <option value="PhonePe">PhonePe</option>
+                          <option value="Paytm">Paytm</option>
+                          <option value="BHIM UPI">BHIM UPI</option>
+                          <option value="Cred">Cred</option>
+                          <option value="Amazon Pay">Amazon Pay</option>
+                          <option value="Bank UPI App">Bank UPI App</option>
+                          <option value="Other UPI">Other UPI</option>
+                        </select>
+                      </div>
+                      <div>
+                        <Label>UPI ID / VPA / Bank ID</Label>
+                        <input
+                          value={paymentForm.upiId}
+                          onChange={e => setPaymentForm({...paymentForm, upiId: e.target.value})}
+                          className={inp}
+                          placeholder="e.g. customer@okhdfcbank / number@upi"
+                        />
+                      </div>
+                      <div>
+                        <Label>UTR / Ref No / Txn ID</Label>
+                        <input
+                          value={paymentForm.transactionId}
+                          onChange={e => setPaymentForm({...paymentForm, transactionId: e.target.value})}
+                          className={inp}
+                          placeholder="e.g. 12-digit UTR No"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Dynamic Fields: Bank Transfer */}
+                {paymentForm.method === 'Bank Transfer' && (
+                  <div className="p-4 bg-blue-50/60 rounded-xl border border-blue-100 space-y-3">
+                    <p className="text-xs font-bold text-blue-900 uppercase tracking-wider">Bank Transfer Details</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                      <div>
+                        <Label>Bank Name</Label>
+                        <input
+                          list="bank-transfer-names"
+                          value={paymentForm.bankName}
+                          onChange={e => setPaymentForm({...paymentForm, bankName: e.target.value})}
+                          className={inp}
+                          placeholder="e.g. SBI, HDFC Bank..."
+                        />
+                        <datalist id="bank-transfer-names">
+                          <option value="State Bank of India (SBI)" />
+                          <option value="HDFC Bank" />
+                          <option value="ICICI Bank" />
+                          <option value="Axis Bank" />
+                          <option value="Punjab National Bank (PNB)" />
+                          <option value="Bank of Baroda" />
+                          <option value="Kotak Mahindra Bank" />
+                          <option value="Canara Bank" />
+                          <option value="Union Bank of India" />
+                          <option value="Bandhan Bank" />
+                        </datalist>
+                      </div>
+                      <div>
+                        <Label>Transfer Type</Label>
+                        <select
+                          value={paymentForm.transferType}
+                          onChange={e => setPaymentForm({...paymentForm, transferType: e.target.value})}
+                          className={inp}
+                        >
+                          <option value="IMPS">IMPS (Immediate)</option>
+                          <option value="NEFT">NEFT</option>
+                          <option value="RTGS">RTGS</option>
+                          <option value="Direct Transfer">Account Transfer</option>
+                        </select>
+                      </div>
+                      <div>
+                        <Label>Account No / Last 4</Label>
+                        <input
+                          value={paymentForm.accountNumber}
+                          onChange={e => setPaymentForm({...paymentForm, accountNumber: e.target.value})}
+                          className={inp}
+                          placeholder="e.g. A/C No. or last 4 digits"
+                        />
+                      </div>
+                      <div>
+                        <Label>UTR / Reference No</Label>
+                        <input
+                          value={paymentForm.transactionId}
+                          onChange={e => setPaymentForm({...paymentForm, transactionId: e.target.value})}
+                          className={inp}
+                          placeholder="e.g. UTR / Ref No"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Dynamic Fields: Card */}
+                {paymentForm.method === 'Card' && (
+                  <div className="p-4 bg-purple-50/60 rounded-xl border border-purple-100 space-y-3">
+                    <p className="text-xs font-bold text-purple-900 uppercase tracking-wider">Card Payment Details</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                      <div>
+                        <Label>Card Type</Label>
+                        <select
+                          value={paymentForm.cardType}
+                          onChange={e => setPaymentForm({...paymentForm, cardType: e.target.value})}
+                          className={inp}
+                        >
+                          <option value="Credit Card">Credit Card</option>
+                          <option value="Debit Card">Debit Card</option>
+                        </select>
+                      </div>
+                      <div>
+                        <Label>Card Network</Label>
+                        <select
+                          value={paymentForm.cardNetwork}
+                          onChange={e => setPaymentForm({...paymentForm, cardNetwork: e.target.value})}
+                          className={inp}
+                        >
+                          <option value="Visa">Visa</option>
+                          <option value="Mastercard">Mastercard</option>
+                          <option value="RuPay">RuPay</option>
+                          <option value="American Express">American Express</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                      <div>
+                        <Label>Last 4 Digits</Label>
+                        <input
+                          value={paymentForm.cardLast4}
+                          maxLength={4}
+                          onChange={e => setPaymentForm({...paymentForm, cardLast4: e.target.value.replace(/\D/g, '').slice(0, 4)})}
+                          className={inp}
+                          placeholder="e.g. 4321"
+                        />
+                      </div>
+                      <div>
+                        <Label>Auth / Txn Code</Label>
+                        <input
+                          value={paymentForm.transactionId}
+                          onChange={e => setPaymentForm({...paymentForm, transactionId: e.target.value})}
+                          className={inp}
+                          placeholder="e.g. Auth Code / Ref"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Dynamic Fields: Other */}
+                {paymentForm.method === 'Other' && (
+                  <div className="p-4 bg-slate-100/80 rounded-xl border border-slate-200">
+                    <div>
+                      <Label>Reference / Cheque No.</Label>
+                      <input
+                        value={paymentForm.transactionId}
+                        onChange={e => setPaymentForm({...paymentForm, transactionId: e.target.value})}
+                        className={inp}
+                        placeholder="e.g. Cheque No / Reference ID"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Notes (always available) */}
+                <div>
+                  <Label>{paymentForm.method === 'Cash' ? 'Notes / Received By (Optional)' : 'Additional Notes / Remarks (Optional)'}</Label>
+                  <input
+                    value={paymentForm.notes}
+                    onChange={e => setPaymentForm({...paymentForm, notes: e.target.value})}
+                    className={inp}
+                    placeholder={paymentForm.method === 'Cash' ? 'e.g. Received cash at office / Receipt #' : 'e.g. Paid from HDFC account, booking advance'}
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => { setShowPaymentForm(false); setEditingPayment(null); }}
+                    className="py-2.5 px-5 bg-white border border-slate-200 font-bold rounded-xl text-slate-600 hover:bg-slate-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={savePayment}
+                    disabled={loading}
+                    className="py-2.5 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow transition-colors flex items-center gap-2"
+                  >
+                    {loading ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                    {editingPayment ? 'Update Payment' : 'Save Payment'}
+                  </button>
+                </div>
               </div>
             )}
 
             {!bill.payments || bill.payments.length === 0 ? (
               <div className="text-center py-6 text-slate-400 font-bold text-sm bg-slate-50 rounded-xl border border-slate-100">No payments recorded yet.</div>
             ) : (
-              <table className="w-full text-left text-sm">
-                <thead className="text-xs font-bold text-slate-400 uppercase border-b">
-                  <tr><th className="pb-3">Date</th><th className="pb-3">Method</th><th className="pb-3">Txn ID</th><th className="pb-3 font-extrabold text-slate-900 text-right">Amount</th><th className="pb-3 text-right">Action</th></tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
-                  {bill.payments.map((p, i) => (
-                    <tr key={i} className="hover:bg-slate-50">
-                      <td className="py-3">{new Date(p.date).toLocaleDateString('en-IN')}</td>
-                      <td className="py-3"><span className="px-2 py-1 bg-slate-100 rounded text-xs">{p.method}</span></td>
-                      <td className="py-3 text-slate-500 text-xs">{p.transactionId || '-'}</td>
-                      <td className="py-3 text-right font-extrabold text-emerald-600">₹{p.amount.toLocaleString('en-IN')}</td>
-                      <td className="py-3 text-right">
-                        <div className="flex justify-end gap-2">
-                          <button onClick={() => openPaymentForm(p)} className="p-1.5 text-slate-400 hover:text-indigo-600"><Edit2 size={14} /></button>
-                          <button onClick={() => deletePayment(p._id)} className="p-1.5 text-slate-400 hover:text-red-600"><Trash2 size={14} /></button>
-                        </div>
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="text-xs font-bold text-slate-400 uppercase border-b">
+                    <tr>
+                      <th className="pb-3 w-28">Date</th>
+                      <th className="pb-3 w-32">Method</th>
+                      <th className="pb-3">Payment Details</th>
+                      <th className="pb-3 font-extrabold text-slate-900 text-right w-32">Amount</th>
+                      <th className="pb-3 text-right w-20">Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
+                    {bill.payments.map((p, i) => (
+                      <tr key={i} className="hover:bg-slate-50/70 transition-colors">
+                        <td className="py-3 text-slate-700 whitespace-nowrap">{new Date(p.date).toLocaleDateString('en-IN')}</td>
+                        <td className="py-3 whitespace-nowrap">
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${getPaymentMethodBadgeClass(p.method)}`}>
+                            {p.method}
+                          </span>
+                        </td>
+                        <td className="py-3 text-xs">
+                          {p.method === 'UPI' && (
+                            <div className="space-y-0.5">
+                              <div className="font-bold text-slate-900 flex items-center gap-1.5 flex-wrap">
+                                {p.paymentApp && <span className="text-indigo-700 font-bold bg-indigo-50 px-1.5 py-0.5 rounded text-[10px]">{p.paymentApp}</span>}
+                                {p.transactionId ? <span>UTR: <span className="font-mono">{p.transactionId}</span></span> : <span className="text-slate-400">No UTR</span>}
+                              </div>
+                              {p.upiId && <div className="text-slate-500">UPI ID: <span className="font-medium text-slate-700">{p.upiId}</span></div>}
+                            </div>
+                          )}
+
+                          {p.method === 'Bank Transfer' && (
+                            <div className="space-y-0.5">
+                              <div className="font-bold text-slate-900 flex items-center gap-1.5 flex-wrap">
+                                <span>{p.bankName || 'Bank Transfer'}</span>
+                                {p.transferType && <span className="text-blue-700 font-bold bg-blue-50 px-1.5 py-0.5 rounded text-[10px] uppercase">{p.transferType}</span>}
+                              </div>
+                              <div className="text-slate-500 flex flex-wrap gap-x-2">
+                                {p.accountNumber && <span>A/C: <span className="font-medium text-slate-700">{p.accountNumber}</span></span>}
+                                {p.transactionId && <span>Ref/UTR: <span className="font-mono font-medium text-slate-700">{p.transactionId}</span></span>}
+                              </div>
+                            </div>
+                          )}
+
+                          {p.method === 'Card' && (
+                            <div className="space-y-0.5">
+                              <div className="font-bold text-slate-900 flex items-center gap-1.5 flex-wrap">
+                                <span>{[p.cardNetwork, p.cardType || 'Card'].filter(Boolean).join(' ')}</span>
+                                {p.cardLast4 && <span className="font-mono text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded text-[10px]">•••• {p.cardLast4}</span>}
+                              </div>
+                              {p.transactionId && <div className="text-slate-500">Auth/Txn: <span className="font-mono font-medium text-slate-700">{p.transactionId}</span></div>}
+                            </div>
+                          )}
+
+                          {p.method === 'Cash' && (
+                            <div className="text-slate-700 font-medium flex items-center gap-1.5">
+                              <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[10px] font-bold">Cash Received</span>
+                            </div>
+                          )}
+
+                          {p.method === 'Other' && (
+                            <div className="font-bold text-slate-900">
+                              {p.transactionId ? <span>Ref: <span className="font-mono">{p.transactionId}</span></span> : '-'}
+                            </div>
+                          )}
+
+                          {!['UPI', 'Bank Transfer', 'Card', 'Cash', 'Other'].includes(p.method) && p.transactionId && (
+                            <div className="font-bold text-slate-900">Txn: <span className="font-mono">{p.transactionId}</span></div>
+                          )}
+
+                          {p.notes && <div className="text-slate-400 italic text-[11px] mt-0.5">Note: {p.notes}</div>}
+                        </td>
+                        <td className="py-3 text-right font-extrabold text-emerald-600 text-base whitespace-nowrap">₹{p.amount.toLocaleString('en-IN')}</td>
+                        <td className="py-3 text-right whitespace-nowrap">
+                          <div className="flex justify-end gap-1">
+                            <button onClick={() => openPaymentForm(p)} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Edit Payment"><Edit2 size={14} /></button>
+                            <button onClick={() => deletePayment(p._id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete Payment"><Trash2 size={14} /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
 
           <div className="flex justify-between gap-4 pt-6 mt-6 border-t border-slate-100">
             <button onClick={() => setViewMode('edit')} className="px-6 py-3 rounded-xl border-2 border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition-colors flex items-center gap-2"><Edit2 size={16} /> Edit Bill Details</button>
             <div className="flex gap-3">
+              <a href={`${API}/bills/${bill._id}/pdf`} target="_blank" rel="noopener noreferrer" className="px-5 py-3 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-colors flex items-center gap-2 shadow-lg"><FileText size={16} /> View PDF</a>
               <button onClick={() => window.open('/admin/bill/' + bill._id, '_blank')} className="px-6 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-lg"><Printer size={16} /> Print Bill</button>
             </div>
           </div>

@@ -84,7 +84,7 @@ exports.sendBillEmail = async (req, res) => {
         <thead>
           <tr style="background:#f8fafc;">
             <th style="padding:10px 14px;text-align:left;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #e2e8f0;">Description</th>
-            <th style="padding:10px 14px;text-align:center;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #e2e8f0;width:60px;">Qty</th>
+            <th style="padding:10px 14px;text-align:center;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #e2e8f0;width:60px;">Head</th>
             <th style="padding:10px 14px;text-align:right;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #e2e8f0;width:100px;">Rate</th>
             <th style="padding:10px 14px;text-align:right;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #e2e8f0;width:100px;">Amount</th>
           </tr>
@@ -140,18 +140,24 @@ exports.sendBillEmail = async (req, res) => {
     // Generate PDF
     let pdfBuffer = null;
     try {
-      const clientUrl = req.body.clientUrl || process.env.FRONTEND_URL || 'http://localhost:5173';
-      const billDoc = await Bill.findById(bill._id);
-      if (billDoc) {
-        const items = await InvoiceItem.find({ billId: billDoc._id });
-        const payments = await Payment.find({ billId: billDoc._id }).sort({ date: -1 });
-        const fullBillData = { ...billDoc.toObject(), items, payments };
-        pdfBuffer = await generateBillPDF(fullBillData, clientUrl);
-      } else {
-        pdfBuffer = await generateBillPDF(bill, clientUrl);
+      const billId = bill._id || bill.id;
+      let fullBillData = bill;
+      if (billId) {
+        const billDoc = await Bill.findById(billId);
+        if (billDoc) {
+          const items = await InvoiceItem.find({ billId: billDoc._id });
+          const payments = await Payment.find({ billId: billDoc._id }).sort({ date: -1 });
+          fullBillData = { ...billDoc.toObject(), items, payments };
+        }
       }
+      pdfBuffer = await generateBillPDF(fullBillData);
     } catch (pdfErr) {
-      console.warn('PDF generation failed, sending without attachment:', pdfErr.message);
+      console.warn('PDF generation primary error, attempting basic fallback:', pdfErr.message);
+      try {
+        pdfBuffer = await generateBillPDF(bill);
+      } catch (fallbackErr) {
+        console.error('All PDF generation methods failed:', fallbackErr);
+      }
     }
 
     const mailOptions = {

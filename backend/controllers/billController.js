@@ -14,12 +14,14 @@ exports.downloadBillPDF = async (req, res) => {
     const payments = await Payment.find({ billId: billDoc._id }).sort({ date: -1 });
 
     const billData = { ...billDoc.toObject(), items, payments };
+    const pdfBuffer = await generateBillPDF(billData);
 
-    const clientUrl = req.query.clientUrl || process.env.FRONTEND_URL || 'http://localhost:5173';
-    const pdfBuffer = await generateBillPDF(billData, clientUrl);
+    const isDownload = req.query.download === 'true';
+    const disposition = isDownload ? 'attachment' : 'inline';
+
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="Invoice_${billDoc.billNumber}.pdf"`,
+      'Content-Disposition': `${disposition}; filename="Invoice_${billDoc.billNumber}.pdf"`,
       'Content-Length': pdfBuffer.length,
     });
     res.send(pdfBuffer);
@@ -105,9 +107,18 @@ exports.createBill = async (req, res) => {
       const initialPayment = new Payment({
         billId: newBill._id,
         amount: advancePaid,
-        method: req.body.paymentMethod || 'Other',
+        method: req.body.paymentMethod || 'Cash',
         date: new Date(),
-        notes: 'Initial Advance Payment'
+        transactionId: req.body.transactionId || '',
+        upiId: req.body.upiId || '',
+        paymentApp: req.body.paymentApp || '',
+        bankName: req.body.bankName || '',
+        accountNumber: req.body.accountNumber || '',
+        transferType: req.body.transferType || '',
+        cardType: req.body.cardType || '',
+        cardNetwork: req.body.cardNetwork || '',
+        cardLast4: req.body.cardLast4 || '',
+        notes: req.body.paymentNotes || 'Initial Advance Payment'
       });
       await initialPayment.save();
     }

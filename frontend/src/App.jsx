@@ -127,6 +127,8 @@ export default function App() {
           <Route path="/admin/all-customers" element={<AdminAllCustomers />} />
           <Route path="/admin/unpaid-bills" element={<AdminUnpaidBills />} />
           <Route path="/admin/bill/:id" element={<BillPrintPage />} />
+          <Route path="/invoice/:id" element={<BillPrintPage />} />
+          <Route path="/bill/:id" element={<BillPrintPage />} />
         </Routes>
       </motion.div>
     </AnimatePresence>
