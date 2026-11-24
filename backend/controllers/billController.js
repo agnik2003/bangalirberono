@@ -33,10 +33,37 @@ exports.downloadBillPDF = async (req, res) => {
 
 exports.createBill = async (req, res) => {
   try {
-    if (req.body.bookingId) {
-      const existingBill = await Bill.findOne({ bookingId: req.body.bookingId });
+    const billData = { ...req.body };
+    if (!billData.bookingId || typeof billData.bookingId !== 'string' || !billData.bookingId.trim()) {
+      delete billData.bookingId;
+    } else {
+      const existingBill = await Bill.findOne({ bookingId: billData.bookingId });
       if (existingBill) {
         return res.status(400).json({ success: false, error: 'Bill already exists for this booking.' });
+      }
+    }
+
+    // Check if duplicate bill already exists for the same customer phone/name and package
+    const cleanPhone = (billData.customerPhone || '').trim().replace(/[^\d]/g, '');
+    const cleanName = (billData.customerName || '').trim();
+    const cleanPackage = (billData.packageName || '').trim();
+
+    if (cleanPackage && (cleanPhone || cleanName)) {
+      const matchCriteria = {
+        packageName: { $regex: new RegExp(`^${cleanPackage.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
+      };
+      if (cleanPhone.length >= 10) {
+        matchCriteria.customerPhone = { $regex: new RegExp(cleanPhone.slice(-10) + '$') };
+      } else {
+        matchCriteria.customerName = { $regex: new RegExp(`^${cleanName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') };
+      }
+
+      const duplicateBill = await Bill.findOne(matchCriteria);
+      if (duplicateBill) {
+        return res.status(400).json({
+          success: false,
+          error: `Bill #${duplicateBill.billNumber} already exists for ${cleanName} on tour "${cleanPackage}". Please open the existing bill to add payments or view details instead of creating a duplicate.`
+        });
       }
     }
 
@@ -50,7 +77,7 @@ exports.createBill = async (req, res) => {
     }
     const billNumber = `BB-${nextNum.toString().padStart(4, '0')}`;
 
-    let items = req.body.items || [];
+    let items = billData.items || [];
     let subtotal = 0;
 
     items.forEach(item => {
@@ -58,14 +85,14 @@ exports.createBill = async (req, res) => {
       subtotal += item.amount;
     });
 
-    let discount = parseFloat(req.body.discount) || 0;
-    let tax = parseFloat(req.body.tax) || 0;
+    let discount = parseFloat(billData.discount) || 0;
+    let tax = parseFloat(billData.tax) || 0;
 
     // Use passed totalAmount as fallback for backward compatibility
-    let calculatedTotal = subtotal > 0 ? (subtotal - discount + tax) : (parseFloat(req.body.totalAmount) || 0);
+    let calculatedTotal = subtotal > 0 ? (subtotal - discount + tax) : (parseFloat(billData.totalAmount) || 0);
     if (calculatedTotal < 0) calculatedTotal = 0;
 
-    let advancePaid = parseFloat(req.body.advancePaid) || 0;
+    let advancePaid = parseFloat(billData.advancePaid) || 0;
 
     if (calculatedTotal < 0 || advancePaid < 0) {
       return res.status(400).json({ success: false, error: 'Amounts cannot be negative.' });
@@ -78,7 +105,7 @@ exports.createBill = async (req, res) => {
     let paymentStatus = advancePaid === 0 ? 'PENDING' : (advancePaid >= calculatedTotal ? 'PAID' : 'PARTIALLY PAID');
 
     const newBill = new Bill({
-      ...req.body,
+      ...billData,
       totalAmount: calculatedTotal,
       subtotal,
       discount,
@@ -202,8 +229,13 @@ exports.updateBill = async (req, res) => {
     let dueAmount = calculatedTotal - advancePaid;
     let paymentStatus = advancePaid === 0 ? 'PENDING' : (advancePaid >= calculatedTotal ? 'PAID' : 'PARTIALLY PAID');
 
+    const updateData = { ...req.body };
+    if (!updateData.bookingId || typeof updateData.bookingId !== 'string' || !updateData.bookingId.trim()) {
+      delete updateData.bookingId;
+    }
+
     const updatedBill = await Bill.findByIdAndUpdate(req.params.id, {
-      ...req.body,
+      ...updateData,
       totalAmount: calculatedTotal,
       subtotal,
       discount,

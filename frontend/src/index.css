@@ -65,9 +65,10 @@ body {
   font-family: var(--font-sans);
 }
 
-/* ---- Scroll bar ---- */
+/* ---- Scroll bar (Global Dark Theme) ---- */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
@@ -76,11 +77,48 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background: #3a3530;
-  border-radius: 3px;
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-accent-gold);
+}
+
+/* ---- Scroll bar (Admin Theme & Light Cards / Modals) ---- */
+.admin-theme ::-webkit-scrollbar,
+.custom-scrollbar::-webkit-scrollbar,
+.admin-scrollbar::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+.admin-theme ::-webkit-scrollbar-track,
+.custom-scrollbar::-webkit-scrollbar-track,
+.admin-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 9999px;
+}
+
+.admin-theme ::-webkit-scrollbar-thumb,
+.custom-scrollbar::-webkit-scrollbar-thumb,
+.admin-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+  border: 1px solid #f1f5f9;
+}
+
+.admin-theme ::-webkit-scrollbar-thumb:hover,
+.custom-scrollbar::-webkit-scrollbar-thumb:hover,
+.admin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.admin-theme,
+.admin-theme *,
+.custom-scrollbar,
+.admin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
 }
 
 /* ---- Selection ---- */

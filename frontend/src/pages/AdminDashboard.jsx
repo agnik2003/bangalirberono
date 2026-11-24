@@ -1173,6 +1173,7 @@ Thank you for choosing Bangalir Berano!`;
     { id: 'enquiries', label: 'Enquiries', icon: Users, count: enquiries.length },
     { id: 'bookings', label: 'Bookings', icon: Users, count: bookings.length },
     { id: 'add-booking', label: 'Add Booking', icon: Plus, isAction: true },
+    { id: 'add-billing', label: 'Add Billing', icon: Plus, isAction: true },
     { id: 'bills', label: 'Billed Customers', icon: FileText, count: bills.length },
     { id: 'customers-ext', label: 'All Customers', icon: Users, count: customers.length },
     { id: 'packages', label: 'Packages', icon: ImageIcon, count: packages.length },
@@ -1232,6 +1233,25 @@ Thank you for choosing Bangalir Berano!`;
                       setShowBookingModal(true);
                     }}
                     className="w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl font-bold text-xs bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm transition-all group"
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <Plus size={16} className="text-white group-hover:rotate-90 transition-transform" />
+                      <span>{label}</span>
+                    </span>
+                    <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">New</span>
+                  </button>
+                </div>
+              );
+            }
+            if (isAction && id === 'add-billing') {
+              return (
+                <div key={id} className="py-1">
+                  <button
+                    onClick={() => {
+                      setBillingBooking(null);
+                      setShowBillModal(true);
+                    }}
+                    className="w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl font-bold text-xs bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm transition-all group"
                   >
                     <span className="flex items-center gap-2.5">
                       <Plus size={16} className="text-white group-hover:rotate-90 transition-transform" />
@@ -1546,7 +1566,19 @@ Thank you for choosing Bangalir Berano!`;
             <div className="rounded-2xl bg-white border border-slate-200 overflow-hidden">
               <div className="p-5 border-b border-slate-200 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold">Recent Bills</h2>
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-900">Recent Bills</h2>
+                    <p className="text-xs text-slate-500 mt-0.5">Manage customer billing, invoices & payments</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setBillingBooking(null);
+                      setShowBillModal(true);
+                    }}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs sm:text-sm shadow-sm transition-colors flex items-center gap-2"
+                  >
+                    <Plus size={16} /> Add Billing
+                  </button>
                 </div>
                 <div className="flex flex-wrap gap-2 items-center">
                   <div className="relative">
@@ -2331,13 +2363,26 @@ Thank you for choosing Bangalir Berano!`;
       )}
 
       {/* ── Bill Form Modal ── */}
-      {showBillModal && billingBooking && (
+      {showBillModal && (
         <BillModal
           booking={billingBooking}
           packages={packages}
-          onClose={() => setShowBillModal(false)}
-          onSaved={() => {
+          customers={customers}
+          bookings={bookings}
+          bills={bills}
+          onClose={() => {
+            setShowBillModal(false);
+            setBillingBooking(null);
+          }}
+          onSaved={(newBill) => {
+            setShowBillModal(false);
+            setBillingBooking(null);
             fetchBills();
+            fetchBookings();
+            fetchCustomers();
+            setActiveTab('bills');
+            setToastMessage(`Bill ${newBill?.billNumber || ''} created successfully!`);
+            setTimeout(() => setToastMessage(null), 3500);
           }}
         />
       )}
@@ -2347,8 +2392,15 @@ Thank you for choosing Bangalir Berano!`;
         <BillModal
           existingBillId={editingBill._id}
           packages={packages}
+          customers={customers}
+          bookings={bookings}
+          bills={bills}
           onClose={() => setEditingBill(null)}
-          onSaved={() => fetchBills()}
+          onSaved={() => {
+            fetchBills();
+            fetchBookings();
+            fetchCustomers();
+          }}
         />
       )}
 
